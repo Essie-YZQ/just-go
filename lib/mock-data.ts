@@ -1,9 +1,63 @@
-import type { TripFormData, TravelResult, Restaurant, Activity, DayPlan } from './types'
+import type { TripFormData, TravelResult, Restaurant, Activity, DayPlan, DayActivity, SourceInsight, AlternativeVersion } from './types'
 import { SOURCES } from './constants'
 
 const SOURCE_LABELS: Record<string, string> = Object.fromEntries(
   SOURCES.map((s) => [s.value, s.name])
 )
+
+// ─── Source intelligence templates ───────────────────────────────────────────
+
+const SOURCE_INTEL: Record<string, Omit<SourceInsight, 'sourceValue'>> = {
+  michelin: {
+    role: 'Fine dining & premium restaurants',
+    insight: 'Starred restaurants and quality benchmarks shaped every dining recommendation in this plan.',
+    impact: 'High',
+  },
+  reddit: {
+    role: 'Neighborhood advice & practical tips',
+    insight: 'Community-vetted spots locals actually go to — cross-checked tourist traps and flagged what\'s genuinely worth it.',
+    impact: 'High',
+  },
+  rednote: {
+    role: 'Visual hotspots & trending picks',
+    insight: 'Aesthetic-first recommendations from Chinese travel creators — cafés, photo spots, and what\'s trending right now.',
+    impact: 'High',
+  },
+  eater: {
+    role: 'Restaurants, cafés & cocktail bars',
+    insight: 'Editorial food journalism picks — reliable for recent openings, neighborhood bests, and underrated spots.',
+    impact: 'Medium',
+  },
+  'google-reviews': {
+    role: 'Reliability & opening-hours confidence',
+    insight: 'High-volume ratings cross-checked for consistency — filtered out anything with recent mixed reviews.',
+    impact: 'Medium',
+  },
+  youtube: {
+    role: 'Visual guides & creator walk-throughs',
+    insight: 'Video content from creators who\'ve been there — used to validate logistics and get a feel before arriving.',
+    impact: 'Medium',
+  },
+  'local-blogs': {
+    role: 'Hyperlocal spots & hidden gems',
+    insight: 'On-the-ground picks from people who live there — surfaces spots that don\'t show up on mainstream lists.',
+    impact: 'High',
+  },
+  general: {
+    role: 'Balanced mix of popular sources',
+    insight: 'A blend of crowd-favorite ratings and editorial picks for a well-rounded experience.',
+    impact: 'Medium',
+  },
+}
+
+function buildSourceIntelligence(sources: string[]): SourceInsight[] {
+  if (sources.length === 0) return [{ sourceValue: 'general', ...SOURCE_INTEL.general }]
+  return sources
+    .filter((s) => SOURCE_INTEL[s])
+    .map((s) => ({ sourceValue: s, ...SOURCE_INTEL[s] }))
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getPrimarySource(sources: string[]): string {
   if (sources.includes('rednote')) return 'rednote'
@@ -14,7 +68,7 @@ function getPrimarySource(sources: string[]): string {
   return 'general'
 }
 
-function buildItinerary(days: number, morning: string, afternoon: string, evening: string): DayPlan[] {
+function buildItinerary(days: number, morning: DayActivity, afternoon: DayActivity, evening: DayActivity): DayPlan[] {
   return Array.from({ length: Math.min(days, 5) }, (_, i) => ({
     day: i + 1,
     morning,
@@ -23,9 +77,23 @@ function buildItinerary(days: number, morning: string, afternoon: string, evenin
   }))
 }
 
-const DESTINATION_DATA: Record<string, (source: string, days: number) => TravelResult> = {
-  tokyo: (source, days) => {
+function budgetLabel(budget: string): string {
+  const map: Record<string, string> = {
+    budget: 'budget-friendly',
+    midrange: 'comfortable',
+    premium: 'premium',
+    luxury: 'luxury',
+  }
+  return map[budget] ?? 'comfortable'
+}
+
+// ─── Destination data ─────────────────────────────────────────────────────────
+
+const DESTINATION_DATA: Record<string, (source: string, days: number, tripData: TripFormData) => TravelResult> = {
+
+  tokyo: (source, days, tripData) => {
     const sourceLabel = SOURCE_LABELS[source] || 'General'
+
     const restaurantsBySource: Record<string, Restaurant[]> = {
       rednote: [
         { name: 'Ichiran Ramen Shibuya', cuisine: 'Ramen', description: 'Solo dining booths, ultra-concentrated tonkotsu broth — a must-photograph moment.', priceRange: '¥', source: sourceLabel },
@@ -59,17 +127,101 @@ const DESTINATION_DATA: Record<string, (source: string, days: number) => TravelR
       { name: 'Harajuku Takeshita Street', type: 'Shopping', description: 'Youth fashion, crepes, and pop culture in one pedestrian street.', duration: '1–2 hours' },
     ]
 
-    const itinerary = buildItinerary(
-      days,
-      'Tsukiji market breakfast → Senso-ji temple in Asakusa',
-      'teamLab Borderless → Harajuku shopping',
-      'Shibuya Crossing → Dinner in Shinjuku → Golden Gai bar-hopping'
-    )
+    const morning: DayActivity = {
+      name: 'Tsukiji market breakfast → Senso-ji temple in Asakusa',
+      category: 'Food & Culture',
+      whyFits: source === 'michelin'
+        ? 'Premium-grade seafood at Tsukiji — starred chefs source here. Senso-ji is the cultural anchor for any curated Tokyo visit.'
+        : source === 'rednote'
+        ? 'Senso-ji at dawn is one of the most-shared Tokyo shots on RedNote — misty, crowd-free, and endlessly photogenic.'
+        : source === 'reddit'
+        ? 'r/JapanTravel\'s unanimous Day 1 start — the market locals and food bloggers both love, plus Senso-ji before the tourist rush.'
+        : 'The classic Tokyo morning — premium seafood, then the city\'s oldest temple.',
+      sources: source === 'michelin' ? ['michelin', 'google-reviews'] : source === 'rednote' ? ['rednote'] : source === 'reddit' ? ['reddit'] : ['google-reviews'],
+    }
+
+    const afternoon: DayActivity = {
+      name: 'teamLab Borderless → Harajuku shopping',
+      category: 'Art & Shopping',
+      whyFits: source === 'michelin'
+        ? 'World-class immersive art — the kind of premium cultural experience your budget supports.'
+        : source === 'rednote'
+        ? 'Harajuku fashion and Shibuya streetwear are the most-documented aesthetic neighborhoods on RedNote.'
+        : source === 'reddit'
+        ? 'Reddit\'s top-voted Tokyo activity — book 2 weeks ahead, it sells out regularly.'
+        : 'Two distinct Tokyo experiences back-to-back — digital art and street fashion.',
+      sources: source === 'rednote' ? ['rednote'] : source === 'reddit' ? ['reddit', 'google-reviews'] : ['google-reviews'],
+    }
+
+    const evening: DayActivity = {
+      name: source === 'michelin'
+        ? 'Shibuya Crossing → Dinner at Narisawa or Den → Golden Gai'
+        : source === 'rednote'
+        ? 'Shibuya Sky observation deck → Dinner → Golden Gai'
+        : 'Shibuya Crossing → Dinner in Shinjuku → Golden Gai bar-hopping',
+      category: 'Dining & Nightlife',
+      whyFits: source === 'michelin'
+        ? 'Dinner at a two-star Michelin restaurant directly aligned with your trusted source — reserve weeks ahead.'
+        : source === 'rednote'
+        ? 'Shibuya Sky rooftop is RedNote\'s #1 Tokyo night view — city lights at dusk, endlessly shareable.'
+        : source === 'reddit'
+        ? 'Golden Gai is Reddit\'s most-recommended Tokyo nightlife — small bars, locals only, all character.'
+        : 'The Shibuya-to-Shinjuku evening is the quintessential Tokyo night.',
+      sources: source === 'michelin' ? ['michelin'] : source === 'rednote' ? ['rednote'] : source === 'reddit' ? ['reddit'] : ['google-reviews'],
+    }
+
+    const budget = budgetLabel(tripData.hotelBudget)
+
+    const whyThisPlan = {
+      summary: source === 'michelin'
+        ? 'Built around your Michelin-focused profile: curated fine dining, premium cultural picks, and every restaurant decision backed by starred sources.'
+        : source === 'rednote'
+        ? 'Built around your RedNote-inspired profile: aesthetic hotspots, trending cafés, and the most-shared experiences among Chinese travel creators.'
+        : source === 'reddit'
+        ? 'Built around your Reddit-sourced profile: community-vetted restaurants, local neighborhoods over tourist zones, and honest tips from real travelers.'
+        : 'Built around your travel profile: a balanced mix of popular sources and local picks for a well-rounded Tokyo experience.',
+      bullets: source === 'michelin'
+        ? [
+            'Dining led by Michelin: every restaurant pick is starred or editorially curated by the guide.',
+            `Budget set to ${budget}: supports tasting menus and premium hotel options without constraints.`,
+            'Cultural picks elevated: teamLab Borderless and Senso-ji over generic tourist circuits.',
+            'Logistics optimized: Shinjuku base gives direct metro access to every major neighborhood.',
+          ]
+        : source === 'rednote'
+        ? [
+            'Visual-first picks: cafés, temples, and streets that are proven content gold on RedNote.',
+            `Budget set to ${budget}: covers trending spots without burning through your budget in two days.`,
+            'Aesthetic neighborhoods: Harajuku, Shimokitazawa, and Yanaka — all RedNote-verified.',
+            'Timing built in: dawn visits to shrines, afternoon café-hopping, rooftop views at dusk.',
+          ]
+        : source === 'reddit'
+        ? [
+            'Community-verified: every restaurant rated by r/JapanTravel, not paid review sites.',
+            `Budget set to ${budget}: Reddit finds the best value at every price point.`,
+            'Local neighborhoods first: Kanda, Golden Gai, Nakameguro — where residents actually eat.',
+            'Practical tips embedded: queue timing, transit hacks, and what to skip entirely.',
+          ]
+        : [
+            'Balanced source mix: popular ratings and editorial picks combined.',
+            `Budget set to ${budget}: covers a full range of Tokyo experiences.`,
+            'Walkable base: Shinjuku gives direct metro access to every major neighborhood.',
+            'Classic and modern: temples, digital art, ramen, and contemporary dining in one plan.',
+          ],
+    }
+
+    const alternativeVersions: AlternativeVersion[] = [
+      { title: 'Budget-Friendly Tokyo', description: 'Same neighborhoods — ramen shops, conbini culture, free temples, and covered markets. Tokyo is one of the best budget cities in the world.' },
+      { title: 'Deep Food Focus', description: 'Every day anchored by eating: Tsukiji breakfast, depachika lunch, ramen at Kikanbo, and omakase dinner. Two to three food stops per half-day.' },
+      { title: 'Rainy Day Version', description: 'teamLab Borderless, underground Shinjuku food halls, Shibuya shopping malls, and Akihabara. Rain in Tokyo is never a problem.' },
+    ]
 
     return {
       destination: 'Tokyo',
       goNoGo: 'GO',
-      goNoGoReason: `Tokyo is one of the most visitor-ready cities in the world — exceptional public transit, world-class food at every price point, and an infinite variety of neighborhoods to explore. Based on your trusted sources (${SOURCE_LABELS[source] || 'General'}), you'll find curated spots that match exactly what you're looking for.`,
+      confidence: 'High',
+      goNoGoReason: `Tokyo is one of the most visitor-ready cities in the world — exceptional public transit, world-class food at every price point, and an infinite variety of neighborhoods. Based on your ${sourceLabel} profile, you'll find curated spots that match exactly what you're looking for.`,
+      whyThisPlan,
+      sourceIntelligence: buildSourceIntelligence(tripData.trustedSources),
       bestArea: {
         name: 'Shinjuku',
         description: 'Central, walkable, and packed with food, nightlife, and transit connections.',
@@ -82,7 +234,8 @@ const DESTINATION_DATA: Record<string, (source: string, days: number) => TravelR
       },
       restaurants,
       thingsToDo: activities,
-      itinerary,
+      itinerary: buildItinerary(days, morning, afternoon, evening),
+      alternativeVersions,
       backupPlan: 'If teamLab Borderless is sold out, visit the Mori Art Museum in Roppongi Hills instead — stunning city views and world-class contemporary art.',
       bookingChecklist: [
         'Book flights to Tokyo (Narita or Haneda)',
@@ -96,8 +249,9 @@ const DESTINATION_DATA: Record<string, (source: string, days: number) => TravelR
     }
   },
 
-  paris: (source, days) => {
+  paris: (source, days, tripData) => {
     const sourceLabel = SOURCE_LABELS[source] || 'General'
+
     const restaurantsBySource: Record<string, Restaurant[]> = {
       rednote: [
         { name: 'Café de Flore', cuisine: 'French Café', description: 'Most photographed café in Paris — art deco interior, iconic terrace. Perfect for content.', priceRange: '€€', source: sourceLabel },
@@ -123,17 +277,99 @@ const DESTINATION_DATA: Record<string, (source: string, days: number) => TravelR
 
     const restaurants = restaurantsBySource[source] ?? restaurantsBySource.general
 
-    const itinerary = buildItinerary(
-      days,
-      'Croissant at a local boulangerie → Louvre Museum (book tickets in advance)',
-      'Stroll through Le Marais → visit Sainte-Chapelle',
-      'Sunset at Trocadéro → dinner in Saint-Germain → evening walk along the Seine'
-    )
+    const morning: DayActivity = {
+      name: 'Croissant at a local boulangerie → Louvre Museum',
+      category: 'Food & Culture',
+      whyFits: source === 'michelin'
+        ? 'A quality boulangerie breakfast — the Parisian standard every starred chef endorses. Book Louvre tickets in advance to skip the queues.'
+        : source === 'rednote'
+        ? 'The boulangerie corner shot is one of the most-shared Paris moments on RedNote — then the Louvre Pyramid for the classic photo.'
+        : source === 'reddit'
+        ? 'r/Paris recommends going to the Louvre at opening — shorter queues, better light, half the crowds.'
+        : 'The quintessential Paris morning — fresh croissant, then the world\'s greatest museum.',
+      sources: source === 'michelin' ? ['michelin', 'google-reviews'] : source === 'rednote' ? ['rednote'] : source === 'reddit' ? ['reddit'] : ['google-reviews'],
+    }
+
+    const afternoon: DayActivity = {
+      name: 'Stroll through Le Marais → Sainte-Chapelle',
+      category: 'Neighborhood & History',
+      whyFits: source === 'michelin'
+        ? 'Le Marais houses some of Paris\'s best boutique restaurants and galleries — your Michelin profile will find plenty to explore here.'
+        : source === 'rednote'
+        ? 'Le Marais is Paris\'s most-photographed neighborhood on RedNote — vintage shops, street art, and the Place des Vosges.'
+        : source === 'reddit'
+        ? 'r/Paris consistently recommends Le Marais as the best neighborhood to wander — great food, no bus tours, real Parisian energy.'
+        : 'The most walkable afternoon in Paris — historic streets, great food, and Sainte-Chapelle\'s legendary stained glass.',
+      sources: source === 'rednote' ? ['rednote'] : source === 'reddit' ? ['reddit', 'google-reviews'] : ['google-reviews'],
+    }
+
+    const evening: DayActivity = {
+      name: source === 'michelin'
+        ? 'Sunset at Trocadéro → Dinner at Septime or Guy Savoy → evening walk along the Seine'
+        : 'Sunset at Trocadéro → dinner in Saint-Germain → evening walk along the Seine',
+      category: 'Dining & Views',
+      whyFits: source === 'michelin'
+        ? 'Septime or Guy Savoy for dinner — Michelin-backed picks that justify an advance reservation weeks ahead.'
+        : source === 'rednote'
+        ? 'The Trocadéro Eiffel Tower view at golden hour is the most-shared Paris shot on any platform — and the Seine walk at night is equally beautiful.'
+        : source === 'reddit'
+        ? 'r/Paris\'s evening formula: Trocadéro at sunset (free, no crowds vs. the tower), then Saint-Germain for dinner with a neighbourhood vibe.'
+        : 'The classic Paris evening — Eiffel Tower at sunset, dinner in a Saint-Germain bistro, walk along the Seine.',
+      sources: source === 'michelin' ? ['michelin'] : source === 'rednote' ? ['rednote'] : source === 'reddit' ? ['reddit'] : ['google-reviews'],
+    }
+
+    const budget = budgetLabel(tripData.hotelBudget)
+
+    const whyThisPlan = {
+      summary: source === 'michelin'
+        ? 'Built around your Michelin-focused profile: curated fine dining, walkable neighborhoods, and every restaurant decision backed by starred sources.'
+        : source === 'rednote'
+        ? 'Built around your RedNote-inspired profile: aesthetic hotspots, iconic cafés, and the most-photographed experiences in the city.'
+        : source === 'reddit'
+        ? 'Built around your Reddit-sourced profile: community-vetted bistros, real neighborhood walks, and the honest Paris that locals actually live in.'
+        : 'Built around your travel profile: a balanced mix of cultural landmarks, great food, and the classic Parisian experience.',
+      bullets: source === 'michelin'
+        ? [
+            'Dining led by Michelin: Septime, Guy Savoy, and Le Cinq — every pick is editorially verified.',
+            `Budget set to ${budget}: supports starred dining and 4-star hotel options in Le Marais.`,
+            'Walkable base: Le Marais puts you 10 minutes from the Louvre, Notre-Dame, and Septime.',
+            'Cultural depth: Musée d\'Orsay and Sainte-Chapelle over tourist-circuit box-ticking.',
+          ]
+        : source === 'rednote'
+        ? [
+            'Visual-first picks: every café, corner, and viewpoint is proven content gold on RedNote.',
+            `Budget set to ${budget}: covers the trending spots without overspending on tourist traps.`,
+            'Most-photographed route: Pyramide du Louvre → Le Marais → Trocadéro at sunset.',
+            'Timing built in: morning boulangeries, afternoon golden light, Eiffel Tower at dusk.',
+          ]
+        : source === 'reddit'
+        ? [
+            'Community-verified: every restaurant picked by r/Paris, not TripAdvisor.',
+            `Budget set to ${budget}: Reddit finds the best Parisian value at every price point.`,
+            'Real neighborhoods: Le Marais, Oberkampf, and Belleville — where Parisians actually go.',
+            'Practical tips embedded: skip the tower, go to Trocadéro; Louvre at opening, not at noon.',
+          ]
+        : [
+            'Balanced source mix: editorial picks and crowd favorites combined.',
+            `Budget set to ${budget}: covers classic Paris without overpaying for the name.',`,
+            'Central base: Le Marais gives easy access to every major landmark.',
+            'Classic and contemporary: great museums, great bistros, and one unforgettable sunset.',
+          ],
+    }
+
+    const alternativeVersions: AlternativeVersion[] = [
+      { title: 'Budget-Friendly Paris', description: 'Bouillon Chartier for dinner, L\'As du Fallafel for lunch, free museum Sundays, and picnics on the Seine. Paris is surprisingly affordable when you know where to go.' },
+      { title: 'Pure Food Itinerary', description: 'Every day anchored by a destination restaurant: market breakfast, arrondissement bistro lunch, and a reservation at Septime or similar. No tourist sites — food only.' },
+      { title: 'Rainy Day Version', description: 'Covered passages of Paris (Galerie Vivienne, Passage des Panoramas), the Musée d\'Orsay, and afternoon tea at Angelina. Paris has perfected the indoor afternoon.' },
+    ]
 
     return {
       destination: 'Paris',
       goNoGo: 'GO',
-      goNoGoReason: `Paris rewards visitors who go with a plan. Crowds can be intense at major landmarks, but the city's neighborhoods have an energy that\'s impossible to replicate. Based on ${SOURCE_LABELS[source] || 'General'} recommendations, you'll find spots beyond the tourist trail.`,
+      confidence: 'High',
+      goNoGoReason: `Paris rewards visitors who go with a plan. Crowds at landmarks can be intense, but the city's neighborhoods have an energy that's impossible to replicate. Based on your ${sourceLabel} profile, you'll find spots well beyond the tourist trail.`,
+      whyThisPlan,
+      sourceIntelligence: buildSourceIntelligence(tripData.trustedSources),
       bestArea: {
         name: 'Le Marais (3rd/4th arrondissement)',
         description: 'Historic, walkable, and centrally located. Mix of museums, galleries, and great food.',
@@ -152,7 +388,8 @@ const DESTINATION_DATA: Record<string, (source: string, days: number) => TravelR
         { name: 'Seine River Cruise', type: 'Experience', description: 'The Bateaux Mouches evening cruise is one of the most romantic things in Paris.', duration: '1.5 hours' },
         { name: 'Palace of Versailles', type: 'Day Trip', description: 'Take the RER C train (~40 min) — a full day trip for the gardens alone.', duration: 'Full day' },
       ],
-      itinerary,
+      itinerary: buildItinerary(days, morning, afternoon, evening),
+      alternativeVersions,
       backupPlan: 'If the Louvre feels overwhelming, the Musée de l\'Orangerie is smaller, quieter, and houses Monet\'s Water Lilies in a breathtaking oval room.',
       bookingChecklist: [
         'Book flights to Paris (CDG or ORY)',
@@ -166,8 +403,9 @@ const DESTINATION_DATA: Record<string, (source: string, days: number) => TravelR
     }
   },
 
-  bali: (source, days) => {
+  bali: (source, days, tripData) => {
     const sourceLabel = SOURCE_LABELS[source] || 'General'
+
     const restaurantsBySource: Record<string, Restaurant[]> = {
       rednote: [
         { name: 'Potato Head Beach Club', cuisine: 'International', description: 'The most photographed beach club in Seminyak — iconic infinity pool, great cocktails.', priceRange: '$$', source: sourceLabel },
@@ -188,17 +426,82 @@ const DESTINATION_DATA: Record<string, (source: string, days: number) => TravelR
 
     const restaurants = restaurantsBySource[source] ?? restaurantsBySource.general
 
-    const itinerary = buildItinerary(
-      days,
-      'Sunrise at Mount Batur (if hiking) or morning yoga in Ubud',
-      'Tegallalang Rice Terraces → Sacred Monkey Forest Sanctuary',
-      'Sunset at Tanah Lot Temple → dinner in Seminyak'
-    )
+    const morning: DayActivity = {
+      name: 'Sunrise at Mount Batur (if hiking) or morning yoga in Ubud',
+      category: 'Adventure & Wellness',
+      whyFits: source === 'rednote'
+        ? 'The Mount Batur sunrise is one of the most-shared Bali moments on RedNote — ethereal light, active volcano, unforgettable shot.'
+        : source === 'reddit'
+        ? 'r/Bali consistently rates the Batur sunrise hike as the single best thing to do in Bali — go with a guide, start at 2am.'
+        : 'Bali mornings are made for active starts — the volcano hike or yoga session sets the tone for the whole day.',
+      sources: source === 'rednote' ? ['rednote'] : source === 'reddit' ? ['reddit'] : ['google-reviews'],
+    }
+
+    const afternoon: DayActivity = {
+      name: 'Tegallalang Rice Terraces → Sacred Monkey Forest Sanctuary',
+      category: 'Nature & Culture',
+      whyFits: source === 'rednote'
+        ? 'Tegallalang is Bali\'s most-photographed landscape on RedNote — the terraced rice fields look extraordinary in afternoon light.'
+        : source === 'reddit'
+        ? 'r/Bali recommends arriving at Tegallalang before 8am to beat coaches — the terraces in morning mist are genuinely magical.'
+        : 'Two of Bali\'s most iconic natural experiences in one afternoon — UNESCO rice terraces and ancient forest.',
+      sources: source === 'rednote' ? ['rednote'] : source === 'reddit' ? ['reddit', 'google-reviews'] : ['google-reviews'],
+    }
+
+    const evening: DayActivity = {
+      name: 'Sunset at Tanah Lot Temple → dinner in Seminyak',
+      category: 'Culture & Dining',
+      whyFits: source === 'rednote'
+        ? 'Tanah Lot at sunset is Bali\'s most iconic image on RedNote — the sea temple silhouette at golden hour is unmissable.'
+        : source === 'reddit'
+        ? 'r/Bali\'s recommended Tanah Lot timing: arrive 45 minutes before sunset, leave before the crowds bottleneck at the exit.'
+        : 'Bali\'s most famous sunset, followed by dinner in Seminyak — the perfect end to any day on the island.',
+      sources: source === 'rednote' ? ['rednote'] : source === 'reddit' ? ['reddit'] : ['google-reviews'],
+    }
+
+    const budget = budgetLabel(tripData.hotelBudget)
+
+    const whyThisPlan = {
+      summary: source === 'rednote'
+        ? 'Built around your RedNote-inspired profile: visual highlights, aesthetic cafés, and Bali\'s most-shared experiences among Chinese travel creators.'
+        : source === 'reddit'
+        ? 'Built around your Reddit-sourced profile: community-vetted warungs, local beaches over tourist zones, and honest tips from people who\'ve been.'
+        : 'Built around your travel profile: Bali\'s best mix of culture, nature, and food — with logistics that don\'t require a rental car.',
+      bullets: source === 'rednote'
+        ? [
+            'Visual-first picks: rice terraces, sea temples, and beach clubs that perform on camera.',
+            `Budget set to ${budget}: covers beach clubs and farm-to-table dinners without overpaying.`,
+            'Split stay recommended: 2 nights in Ubud for aesthetics, then Seminyak for the sunset.',
+            'Timing built in: golden hour at Tanah Lot, terrace shots in morning light.',
+          ]
+        : source === 'reddit'
+        ? [
+            'Community-verified: every warung and spot rated by r/Bali, not travel agencies.',
+            `Budget set to ${budget}: Reddit finds Bali extraordinary value at every price level.`,
+            'Local food first: suckling pig, fried fish with sambal, BBQ ribs — the real Bali.',
+            'Practical tips: scooter rental info, Grab app for Seminyak, what to skip.',
+          ]
+        : [
+            'Balanced split: Ubud for culture and Seminyak for beach — the classic Bali formula.',
+            `Budget set to ${budget}: covers villas, beach clubs, and fine dining in Ubud.`,
+            'Nature highlights: Mount Batur, Tegallalang, and Tanah Lot at sunset.',
+            'Food covered: from warungs to farm-to-table, every meal has a clear recommendation.',
+          ],
+    }
+
+    const alternativeVersions: AlternativeVersion[] = [
+      { title: 'Budget-Friendly Bali', description: 'Warungs over beach clubs, shared scooter over private driver, rice terrace guesthouse over resort. Bali is exceptional at every budget level.' },
+      { title: 'Wellness & Retreat Focus', description: 'Morning yoga in Ubud, afternoon cooking class, evening sound bath. Restructured around rest and renewal rather than sightseeing.' },
+      { title: 'Rainy Season Version', description: 'Indoor temple visits, rice terrace walks in the rain (genuinely beautiful), and spa days. Bali\'s green season is lush — you just need waterproof sandals.' },
+    ]
 
     return {
       destination: 'Bali',
       goNoGo: 'GO',
-      goNoGoReason: `Bali consistently delivers for all types of travelers — spiritual retreats, beach clubs, world-class food, and rice terrace hikes are all within reach. Based on ${SOURCE_LABELS[source] || 'General'} recommendations, there\'s an experience perfectly matched to your style.`,
+      confidence: 'High',
+      goNoGoReason: `Bali consistently delivers for all types of travelers — spiritual retreats, beach clubs, world-class food, and rice terrace hikes are all within reach. Based on your ${sourceLabel} profile, there's an experience perfectly matched to your style.`,
+      whyThisPlan,
+      sourceIntelligence: buildSourceIntelligence(tripData.trustedSources),
       bestArea: {
         name: 'Ubud (for culture) or Seminyak (for beach & nightlife)',
         description: 'Ubud is the cultural and spiritual center. Seminyak is beach clubs and sunsets.',
@@ -206,7 +509,7 @@ const DESTINATION_DATA: Record<string, (source: string, days: number) => TravelR
       },
       transportation: {
         fromAirport: 'Ngurah Rai Airport is 30 min from Seminyak, 1.5 hours from Ubud. Use a pre-booked taxi or Grab app.',
-        gettingAround: 'Rent a scooter if comfortable (~$5/day). Otherwise use Grab (like Uber) or hire a driver for the day (~$35–50).',
+        gettingAround: 'Rent a scooter if comfortable (~$5/day). Otherwise use Grab or hire a driver for the day (~$35–50).',
         tip: 'Google Maps works well in Bali. Traffic in Seminyak can be brutal 4–7pm — plan around it.',
       },
       restaurants,
@@ -217,7 +520,8 @@ const DESTINATION_DATA: Record<string, (source: string, days: number) => TravelR
         { name: 'Mount Batur Sunrise Hike', type: 'Adventure', description: 'Active volcano hike, departs at 2am, spectacular sunrise at the summit.', duration: 'Full day' },
         { name: 'Ubud Traditional Market', type: 'Shopping', description: 'Textiles, crafts, and local goods. Best in the early morning before tour groups arrive.', duration: '1 hour' },
       ],
-      itinerary,
+      itinerary: buildItinerary(days, morning, afternoon, evening),
+      alternativeVersions,
       backupPlan: 'If Mount Batur is cloudy, the Jatiluwih Rice Terraces (a UNESCO site) offer a longer, less-crowded walk through ancient irrigation systems.',
       bookingChecklist: [
         'Book flights to Denpasar (DPS)',
@@ -232,19 +536,48 @@ const DESTINATION_DATA: Record<string, (source: string, days: number) => TravelR
   },
 }
 
-function buildGenericResult(destination: string, source: string, days: number): TravelResult {
+// ─── Generic fallback ─────────────────────────────────────────────────────────
+
+function buildGenericResult(destination: string, source: string, days: number, tripData: TripFormData): TravelResult {
   const sourceLabel = SOURCE_LABELS[source] || 'General'
-  const itinerary = buildItinerary(
-    days,
-    'Explore the city center and main landmarks',
-    'Visit local markets or museums in the afternoon',
-    'Dinner at a recommended local restaurant'
-  )
+  const budget = budgetLabel(tripData.hotelBudget)
+
+  const morning: DayActivity = {
+    name: 'Explore the city center and main landmarks',
+    category: 'Sightseeing',
+    whyFits: `Starting with the city center gives you a clear orientation — your ${sourceLabel} profile will guide you toward the right areas once you\'re on the ground.`,
+    sources: [source === 'general' ? 'google-reviews' : source],
+  }
+
+  const afternoon: DayActivity = {
+    name: 'Local markets or museums in the afternoon',
+    category: 'Culture & Food',
+    whyFits: `Afternoon markets and museums tend to be less crowded and more authentic — consistent with what your ${sourceLabel} profile recommends.`,
+    sources: ['google-reviews'],
+  }
+
+  const evening: DayActivity = {
+    name: 'Dinner at a recommended local restaurant',
+    category: 'Dining',
+    whyFits: `A ${sourceLabel}-recommended dinner to close out the day — prioritizing local cuisine and verified quality.`,
+    sources: [source === 'general' ? 'google-reviews' : source],
+  }
 
   return {
     destination,
     goNoGo: 'GO',
-    goNoGoReason: `${destination} looks like a great choice. Based on ${sourceLabel} recommendations, you\'ll find plenty of experiences tailored to your preferences. This is a destination worth exploring.`,
+    confidence: 'Good',
+    goNoGoReason: `${destination} looks like a great choice. Based on your ${sourceLabel} profile, you'll find plenty of experiences tailored to your preferences. This is a destination worth exploring.`,
+    whyThisPlan: {
+      summary: `Built around your ${sourceLabel}-inspired travel profile: quality-first picks, practical logistics, and recommendations that match your travel style.`,
+      bullets: [
+        `Source-led picks: recommendations drawn from ${sourceLabel} to match your preferences.`,
+        `Budget set to ${budget}: covers accommodation and dining within your range.`,
+        'Central base: staying centrally maximizes access with minimal transit time.',
+        'Flexible itinerary: structured enough to feel confident, loose enough to explore.',
+      ],
+    },
+    sourceIntelligence: buildSourceIntelligence(tripData.trustedSources),
     bestArea: {
       name: 'City Center',
       description: 'Stay centrally to maximize access to attractions, restaurants, and transit.',
@@ -265,7 +598,12 @@ function buildGenericResult(destination: string, source: string, days: number): 
       { name: 'Local Neighborhood Walk', type: 'Exploration', description: 'Wander through the most authentic local neighborhoods.', duration: 'Half day' },
       { name: 'Cultural Experience', type: 'Cultural', description: 'Engage with the local culture through a museum, performance, or market.', duration: '2 hours' },
     ],
-    itinerary,
+    itinerary: buildItinerary(days, morning, afternoon, evening),
+    alternativeVersions: [
+      { title: 'Budget-Friendly Version', description: 'Same destination, value-focused picks — local markets over restaurants, public transit over taxis, guesthouses over hotels.' },
+      { title: 'Food-First Itinerary', description: 'Every day anchored by a food experience — morning market, lunch at a local institution, dinner at the destination\'s most recommended restaurant.' },
+      { title: 'Slow Travel Version', description: 'Fewer stops, deeper experiences. Two neighborhoods instead of five, one great restaurant instead of three, one long museum visit over a rushed circuit.' },
+    ],
     backupPlan: 'Research nearby day trips — most destinations have a hidden gem within 1–2 hours that most tourists miss.',
     bookingChecklist: [
       `Book flights to ${destination}`,
@@ -278,6 +616,8 @@ function buildGenericResult(destination: string, source: string, days: number): 
   }
 }
 
+// ─── Main export ──────────────────────────────────────────────────────────────
+
 export function generateMockResult(tripData: TripFormData): TravelResult {
   const destination = tripData.destination.trim().toLowerCase()
   const source = getPrimarySource(tripData.trustedSources)
@@ -285,8 +625,8 @@ export function generateMockResult(tripData: TripFormData): TravelResult {
 
   const generator = DESTINATION_DATA[destination]
   if (generator) {
-    return generator(source, days)
+    return generator(source, days, tripData)
   }
 
-  return buildGenericResult(tripData.destination.trim(), source, days)
+  return buildGenericResult(tripData.destination.trim(), source, days, tripData)
 }
