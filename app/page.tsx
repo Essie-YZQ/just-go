@@ -1,52 +1,8 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
+import { SOURCES } from '@/lib/constants'
 
-const SOURCE_CARDS = [
-  {
-    name: 'Reddit',
-    tagline: 'Real opinions. No filters.',
-    desc: 'Local intel and honest takes from actual travelers — not sponsored results.',
-    bg: 'bg-orange-50 border-orange-100',
-    nameColor: 'text-orange-700',
-  },
-  {
-    name: 'RedNote',
-    tagline: 'Trending. Aesthetic. Now.',
-    desc: 'Visual hotspots and what\'s popular right now — the traveler\'s eye view.',
-    bg: 'bg-rose-50 border-rose-100',
-    nameColor: 'text-rose-700',
-  },
-  {
-    name: 'Michelin',
-    tagline: 'World-class. Curated.',
-    desc: 'Starred restaurants and expert-level dining — for the serious table.',
-    bg: 'bg-slate-900 border-slate-900',
-    nameColor: 'text-white',
-    taglineColor: 'text-slate-100',
-    descColor: 'text-slate-400',
-  },
-  {
-    name: 'Google Reviews',
-    tagline: 'Crowd-sourced confidence.',
-    desc: 'High-volume ratings that surface what\'s consistently good over time.',
-    bg: 'bg-blue-50 border-blue-100',
-    nameColor: 'text-blue-700',
-  },
-  {
-    name: 'YouTube',
-    tagline: 'See it before you go.',
-    desc: 'Video guides from creators who\'ve been there and know what to look for.',
-    bg: 'bg-red-50 border-red-100',
-    nameColor: 'text-red-700',
-  },
-  {
-    name: 'Eater',
-    tagline: 'Food-forward. Expert-led.',
-    desc: 'Editorial restaurant picks from journalists who cover food full-time.',
-    bg: 'bg-amber-50 border-amber-100',
-    nameColor: 'text-amber-800',
-  },
-]
+const FEATURED_SOURCES = SOURCES.filter((s) => s.featured)
 
 const STEPS = [
   {
@@ -119,8 +75,8 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          {SOURCE_CARDS.map((s) => (
-            <div key={s.name} className={`rounded-2xl border p-6 ${s.bg}`}>
+          {FEATURED_SOURCES.map((s) => (
+            <div key={s.value} className={`rounded-2xl border p-6 ${s.cardBg}`}>
               <p className={`text-sm font-semibold mb-2 ${s.nameColor}`}>{s.name}</p>
               <p className={`text-base font-semibold mb-2 ${s.taglineColor ?? 'text-slate-900'}`}>
                 {s.tagline}

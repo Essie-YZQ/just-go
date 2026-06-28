@@ -1,15 +1,9 @@
 import type { TripFormData, TravelResult, Restaurant, Activity, DayPlan } from './types'
+import { SOURCES } from './constants'
 
-const SOURCE_LABELS: Record<string, string> = {
-  rednote: 'RedNote',
-  reddit: 'Reddit',
-  'google-reviews': 'Google Reviews',
-  eater: 'Eater',
-  michelin: 'Michelin Guide',
-  youtube: 'YouTube',
-  'local-blogs': 'Local Blogs',
-  general: 'General',
-}
+const SOURCE_LABELS: Record<string, string> = Object.fromEntries(
+  SOURCES.map((s) => [s.value, s.name])
+)
 
 function getPrimarySource(sources: string[]): string {
   if (sources.includes('rednote')) return 'rednote'

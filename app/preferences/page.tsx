@@ -5,6 +5,7 @@ import { Select } from '@/components/ui/Select'
 import { MultiSelect } from '@/components/ui/MultiSelect'
 import { Button } from '@/components/ui/Button'
 import { savePreferences, getPreferences } from '@/lib/storage'
+import { INTEREST_OPTIONS } from '@/lib/constants'
 import type { UserPreferences } from '@/lib/types'
 
 const BUDGET_OPTIONS = [
@@ -50,18 +51,6 @@ const SOURCE_OPTIONS = [
   { value: 'local-blogs', label: 'Local Blogs' },
 ]
 
-const INTEREST_OPTIONS = [
-  { value: 'museums', label: 'Museums' },
-  { value: 'nightlife', label: 'Nightlife' },
-  { value: 'nature', label: 'Nature' },
-  { value: 'shopping', label: 'Shopping' },
-  { value: 'food', label: 'Food & Dining' },
-  { value: 'history', label: 'History' },
-  { value: 'art', label: 'Art' },
-  { value: 'beach', label: 'Beach' },
-  { value: 'adventure', label: 'Adventure' },
-  { value: 'photography', label: 'Photography' },
-]
 
 const DEFAULT_PREFS: UserPreferences = {
   budget: 'midrange',

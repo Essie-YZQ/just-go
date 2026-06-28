@@ -3,12 +3,16 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/Input'
+import { Spinner } from '@/components/ui/Spinner'
 import { saveTripData, getPreferences } from '@/lib/storage'
+import { SOURCES, INTEREST_OPTIONS } from '@/lib/constants'
 import type { TripFormData } from '@/lib/types'
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+// ─── Page-local constants ─────────────────────────────────────────────────────
 
-const DURATIONS = ['2', '3', '4', '5', '7', '10', '14']
+const STEP_LABELS = ['The Trip', 'Your Style', 'Your Sources']
+
+const TRIP_DURATIONS = ['2', '3', '4', '5', '7', '10', '14']
 
 const BUDGET_OPTIONS = [
   { value: 'budget', label: 'Budget', sub: 'Under $100 / night' },
@@ -28,98 +32,6 @@ const TRANSPORT_OPTIONS = [
   { value: 'rideshare', label: 'Ride-share' },
   { value: 'walk', label: 'Walk / Bike' },
 ]
-
-const INTEREST_OPTIONS = [
-  { value: 'food', label: 'Food & Dining' },
-  { value: 'art', label: 'Art' },
-  { value: 'museums', label: 'Museums' },
-  { value: 'nature', label: 'Nature' },
-  { value: 'nightlife', label: 'Nightlife' },
-  { value: 'shopping', label: 'Shopping' },
-  { value: 'history', label: 'History' },
-  { value: 'beach', label: 'Beach' },
-  { value: 'adventure', label: 'Adventure' },
-  { value: 'photography', label: 'Photography' },
-]
-
-const SOURCE_OPTIONS = [
-  {
-    value: 'reddit',
-    name: 'Reddit',
-    tagline: 'Real opinions. No filters.',
-    desc: 'Local intel and honest takes from real travelers.',
-    selectedBg: 'bg-orange-50',
-    selectedBorder: 'border-orange-400',
-    nameColor: 'text-orange-700',
-  },
-  {
-    value: 'rednote',
-    name: 'RedNote',
-    tagline: 'Trending. Aesthetic. Now.',
-    desc: 'Visual hotspots and what\'s popular right now.',
-    selectedBg: 'bg-rose-50',
-    selectedBorder: 'border-rose-400',
-    nameColor: 'text-rose-700',
-  },
-  {
-    value: 'michelin',
-    name: 'Michelin',
-    tagline: 'World-class. Curated.',
-    desc: 'Starred restaurants and expert-level picks.',
-    selectedBg: 'bg-slate-900',
-    selectedBorder: 'border-slate-700',
-    nameColor: 'text-white',
-    taglineColor: 'text-slate-200',
-    descColor: 'text-slate-400',
-  },
-  {
-    value: 'google-reviews',
-    name: 'Google Reviews',
-    tagline: 'Crowd-sourced confidence.',
-    desc: 'High-volume ratings that surface what\'s actually good.',
-    selectedBg: 'bg-blue-50',
-    selectedBorder: 'border-blue-400',
-    nameColor: 'text-blue-700',
-  },
-  {
-    value: 'youtube',
-    name: 'YouTube',
-    tagline: 'See it before you go.',
-    desc: 'Video guides from creators who\'ve been there.',
-    selectedBg: 'bg-red-50',
-    selectedBorder: 'border-red-400',
-    nameColor: 'text-red-700',
-  },
-  {
-    value: 'eater',
-    name: 'Eater',
-    tagline: 'Food-forward. Expert-led.',
-    desc: 'Editorial picks from editors who cover food full-time.',
-    selectedBg: 'bg-amber-50',
-    selectedBorder: 'border-amber-400',
-    nameColor: 'text-amber-800',
-  },
-  {
-    value: 'local-blogs',
-    name: 'Local Blogs',
-    tagline: 'On the ground. In the know.',
-    desc: 'Picks from people who actually live there.',
-    selectedBg: 'bg-emerald-50',
-    selectedBorder: 'border-emerald-400',
-    nameColor: 'text-emerald-700',
-  },
-  {
-    value: 'general',
-    name: 'Surprise me',
-    tagline: 'Balanced mix.',
-    desc: 'A blend of popular, well-reviewed recommendations.',
-    selectedBg: 'bg-slate-50',
-    selectedBorder: 'border-slate-400',
-    nameColor: 'text-slate-700',
-  },
-]
-
-const STEP_LABELS = ['The Trip', 'Your Style', 'Your Sources']
 
 // ─── Default form & initializer ──────────────────────────────────────────────
 
@@ -211,11 +123,10 @@ export default function PlannerPage() {
     setTimeout(() => router.push('/results'), 1600)
   }
 
-  // ── Generating state ──
   if (generating) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5">
-        <div className="h-7 w-7 rounded-full border-2 border-slate-200 border-t-slate-700 animate-spin" />
+        <Spinner />
         <div className="text-center">
           <p className="text-base font-medium text-slate-700">Building your plan...</p>
           <p className="text-sm text-slate-400 mt-1">Curating picks from your trusted sources</p>
@@ -245,9 +156,32 @@ export default function PlannerPage() {
 
       {/* Step content — key triggers re-mount + CSS animation */}
       <div className="animate-step" key={step}>
-        {step === 0 && <StepTrip form={form} errors={errors} setField={setField} />}
-        {step === 1 && <StepStyle form={form} setField={setField} toggleArray={toggleArray} />}
-        {step === 2 && <StepSources form={form} toggleArray={toggleArray} error={errors.trustedSources} />}
+        {step === 0 && (
+          <StepTrip
+            form={form}
+            errors={errors}
+            setField={setField}
+            durations={TRIP_DURATIONS}
+          />
+        )}
+        {step === 1 && (
+          <StepStyle
+            form={form}
+            setField={setField}
+            toggleArray={toggleArray}
+            budgetOptions={BUDGET_OPTIONS}
+            paceOptions={PACE_OPTIONS}
+            transportOptions={TRANSPORT_OPTIONS}
+            interestOptions={INTEREST_OPTIONS}
+          />
+        )}
+        {step === 2 && (
+          <StepSources
+            form={form}
+            toggleArray={toggleArray}
+            error={errors.trustedSources}
+          />
+        )}
       </div>
 
       {/* Navigation */}
@@ -285,10 +219,11 @@ export default function PlannerPage() {
 
 // ─── Step 1: The Trip ─────────────────────────────────────────────────────────
 
-function StepTrip({ form, errors, setField }: {
+function StepTrip({ form, errors, setField, durations }: {
   form: TripFormData
   errors: Record<string, string>
   setField: SetField
+  durations: string[]
 }) {
   return (
     <div className="flex flex-col gap-9">
@@ -322,11 +257,10 @@ function StepTrip({ form, errors, setField }: {
           onChange={(e) => setField('arrivalDate', e.target.value)}
           error={errors.arrivalDate}
         />
-
         <div>
           <p className="text-sm font-medium text-slate-700 mb-3">Trip length</p>
           <div className="flex flex-wrap gap-2">
-            {DURATIONS.map((d) => (
+            {durations.map((d) => (
               <button
                 key={d}
                 type="button"
@@ -349,10 +283,17 @@ function StepTrip({ form, errors, setField }: {
 
 // ─── Step 2: Your Style ───────────────────────────────────────────────────────
 
-function StepStyle({ form, setField, toggleArray }: {
+type TileOption = { value: string; label: string; sub: string }
+type ChipOption = { value: string; label: string }
+
+function StepStyle({ form, setField, toggleArray, budgetOptions, paceOptions, transportOptions, interestOptions }: {
   form: TripFormData
   setField: SetField
   toggleArray: ToggleArray
+  budgetOptions: TileOption[]
+  paceOptions: TileOption[]
+  transportOptions: ChipOption[]
+  interestOptions: ChipOption[]
 }) {
   return (
     <div className="flex flex-col gap-9">
@@ -365,7 +306,7 @@ function StepStyle({ form, setField, toggleArray }: {
       <div>
         <p className="text-sm font-medium text-slate-700 mb-3">Budget</p>
         <div className="grid grid-cols-3 gap-2.5">
-          {BUDGET_OPTIONS.map((opt) => (
+          {budgetOptions.map((opt) => (
             <button
               key={opt.value}
               type="button"
@@ -377,9 +318,7 @@ function StepStyle({ form, setField, toggleArray }: {
               }`}
             >
               <span className="text-sm font-semibold">{opt.label}</span>
-              <span className={`text-xs ${form.hotelBudget === opt.value ? 'text-slate-400' : 'text-slate-400'}`}>
-                {opt.sub}
-              </span>
+              <span className="text-xs text-slate-400">{opt.sub}</span>
             </button>
           ))}
         </div>
@@ -389,7 +328,7 @@ function StepStyle({ form, setField, toggleArray }: {
       <div>
         <p className="text-sm font-medium text-slate-700 mb-3">Travel pace</p>
         <div className="grid grid-cols-3 gap-2.5">
-          {PACE_OPTIONS.map((opt) => (
+          {paceOptions.map((opt) => (
             <button
               key={opt.value}
               type="button"
@@ -401,9 +340,7 @@ function StepStyle({ form, setField, toggleArray }: {
               }`}
             >
               <span className="text-sm font-semibold">{opt.label}</span>
-              <span className={`text-xs ${form.travelPace === opt.value ? 'text-slate-400' : 'text-slate-400'}`}>
-                {opt.sub}
-              </span>
+              <span className="text-xs text-slate-400">{opt.sub}</span>
             </button>
           ))}
         </div>
@@ -413,7 +350,7 @@ function StepStyle({ form, setField, toggleArray }: {
       <div>
         <p className="text-sm font-medium text-slate-700 mb-3">Getting around</p>
         <div className="flex flex-wrap gap-2">
-          {TRANSPORT_OPTIONS.map((opt) => (
+          {transportOptions.map((opt) => (
             <button
               key={opt.value}
               type="button"
@@ -435,7 +372,7 @@ function StepStyle({ form, setField, toggleArray }: {
         <p className="text-sm font-medium text-slate-700 mb-1">You&apos;re into</p>
         <p className="text-xs text-slate-400 mb-3">Select all that apply</p>
         <div className="flex flex-wrap gap-2">
-          {INTEREST_OPTIONS.map((opt) => (
+          {interestOptions.map((opt) => (
             <button
               key={opt.value}
               type="button"
@@ -474,9 +411,8 @@ function StepSources({ form, toggleArray, error }: {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {SOURCE_OPTIONS.map((s) => {
+        {SOURCES.map((s) => {
           const selected = form.trustedSources.includes(s.value)
-          const isMichelin = s.value === 'michelin'
           return (
             <button
               key={s.value}
@@ -491,18 +427,10 @@ function StepSources({ form, toggleArray, error }: {
               <p className={`text-sm font-bold mb-1 ${selected ? s.nameColor : 'text-slate-800'}`}>
                 {s.name}
               </p>
-              <p className={`text-sm font-medium mb-1 ${
-                selected
-                  ? (s.taglineColor ?? (isMichelin ? 'text-slate-200' : 'text-slate-700'))
-                  : 'text-slate-600'
-              }`}>
+              <p className={`text-sm font-medium mb-1 ${selected ? (s.taglineColor ?? 'text-slate-700') : 'text-slate-600'}`}>
                 {s.tagline}
               </p>
-              <p className={`text-xs leading-relaxed ${
-                selected
-                  ? (s.descColor ?? (isMichelin ? 'text-slate-400' : 'text-slate-500'))
-                  : 'text-slate-400'
-              }`}>
+              <p className={`text-xs leading-relaxed ${selected ? (s.descColor ?? 'text-slate-500') : 'text-slate-400'}`}>
                 {s.desc}
               </p>
             </button>
