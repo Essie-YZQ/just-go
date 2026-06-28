@@ -74,7 +74,10 @@ export default function PlannerPage() {
   const [step, setStep] = useState(0)
   const [profiles] = useState<TravelProfile[]>(() => getProfiles())
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null)
-  const [form, setForm] = useState<TripFormData>(() => ({ ...DEFAULT_FORM, arrivalDate: getTomorrow() }))
+  const [form, setForm] = useState<TripFormData>(() => ({
+    ...DEFAULT_FORM,
+    arrivalDate: typeof window !== 'undefined' ? getTomorrow() : '',
+  }))
   const [generating, setGenerating] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
