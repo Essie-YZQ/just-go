@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { MultiSelect } from '@/components/ui/MultiSelect'
 import { Button } from '@/components/ui/Button'
-import { saveTripData } from '@/lib/storage'
-import { getPreferences } from '@/lib/storage'
+import { saveTripData, getPreferences } from '@/lib/storage'
 import type { TripFormData } from '@/lib/types'
 
 const HOTEL_BUDGETS = [
@@ -83,26 +82,26 @@ const DEFAULT_FORM: TripFormData = {
   trustedSources: ['general'],
 }
 
+function getInitialForm(): TripFormData {
+  if (typeof window === 'undefined') return DEFAULT_FORM
+  const prefs = getPreferences()
+  if (!prefs) return DEFAULT_FORM
+  return {
+    ...DEFAULT_FORM,
+    hotelBudget: prefs.budget || DEFAULT_FORM.hotelBudget,
+    transportationPreference: prefs.transportationPreference || DEFAULT_FORM.transportationPreference,
+    foodPreference: prefs.favoriteCuisines?.[0] || DEFAULT_FORM.foodPreference,
+    travelPace: prefs.travelPace || DEFAULT_FORM.travelPace,
+    travelInterests: prefs.interests?.length ? prefs.interests : DEFAULT_FORM.travelInterests,
+    trustedSources: prefs.trustedSources?.length ? prefs.trustedSources : DEFAULT_FORM.trustedSources,
+  }
+}
+
 export default function PlannerPage() {
   const router = useRouter()
-  const [form, setForm] = useState<TripFormData>(DEFAULT_FORM)
+  const [form, setForm] = useState<TripFormData>(getInitialForm)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<keyof TripFormData, string>>>({})
-
-  useEffect(() => {
-    const prefs = getPreferences()
-    if (prefs) {
-      setForm((prev) => ({
-        ...prev,
-        hotelBudget: prefs.budget || prev.hotelBudget,
-        transportationPreference: prefs.transportationPreference || prev.transportationPreference,
-        foodPreference: prefs.favoriteCuisines?.[0] || prev.foodPreference,
-        travelPace: prefs.travelPace || prev.travelPace,
-        travelInterests: prefs.interests?.length ? prefs.interests : prev.travelInterests,
-        trustedSources: prefs.trustedSources?.length ? prefs.trustedSources : prev.trustedSources,
-      }))
-    }
-  }, [])
 
   function set<K extends keyof TripFormData>(key: K, value: TripFormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -119,7 +118,7 @@ export default function PlannerPage() {
     return Object.keys(newErrors).length === 0
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!validate()) return
     setLoading(true)
@@ -133,7 +132,7 @@ export default function PlannerPage() {
     <div className="mx-auto max-w-2xl px-6 py-16">
       <div className="mb-10">
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900 mb-2">Plan your trip</h1>
-        <p className="text-sm text-slate-500">Tell us where you want to go and we'll take care of the rest.</p>
+        <p className="text-sm text-slate-500">Tell us where you want to go and we&rsquo;ll take care of the rest.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-10">

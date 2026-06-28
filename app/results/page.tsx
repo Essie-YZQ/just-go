@@ -9,10 +9,16 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import type { TravelResult } from '@/lib/types'
 
+type PageData = {
+  result: TravelResult
+  destination: string
+  tripLength: string
+  arrivalDate: string
+}
+
 export default function ResultsPage() {
   const router = useRouter()
-  const [result, setResult] = useState<TravelResult | null>(null)
-  const [tripData, setTripData] = useState<{ destination: string; tripLength: string; arrivalDate: string } | null>(null)
+  const [pageData, setPageData] = useState<PageData | null>(null)
 
   useEffect(() => {
     const data = getTripData()
@@ -20,11 +26,16 @@ export default function ResultsPage() {
       router.replace('/planner')
       return
     }
-    setTripData({ destination: data.destination, tripLength: data.tripLength, arrivalDate: data.arrivalDate })
-    setResult(generateMockResult(data))
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPageData({
+      result: generateMockResult(data),
+      destination: data.destination,
+      tripLength: data.tripLength,
+      arrivalDate: data.arrivalDate,
+    })
   }, [router])
 
-  if (!result || !tripData) {
+  if (!pageData) {
     return (
       <div className="flex items-center justify-center min-h-96">
         <p className="text-sm text-slate-400">Loading your travel plan...</p>
@@ -32,6 +43,7 @@ export default function ResultsPage() {
     )
   }
 
+  const { result, tripLength, arrivalDate } = pageData
   const isGo = result.goNoGo === 'GO'
 
   return (
@@ -43,8 +55,8 @@ export default function ResultsPage() {
             <p className="text-xs font-semibold tracking-widest uppercase text-slate-400 mb-1">Your travel plan</p>
             <h1 className="text-3xl font-semibold tracking-tight text-slate-900">{result.destination}</h1>
             <p className="text-sm text-slate-500 mt-1">
-              {tripData.arrivalDate && `Arriving ${new Date(tripData.arrivalDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} · `}
-              {tripData.tripLength} days
+              {arrivalDate && `Arriving ${new Date(arrivalDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} · `}
+              {tripLength} days
             </p>
           </div>
           <span

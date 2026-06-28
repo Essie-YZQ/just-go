@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Select } from '@/components/ui/Select'
 import { MultiSelect } from '@/components/ui/MultiSelect'
 import { Button } from '@/components/ui/Button'
@@ -73,20 +73,18 @@ const DEFAULT_PREFS: UserPreferences = {
 }
 
 export default function PreferencesPage() {
-  const [prefs, setPrefs] = useState<UserPreferences>(DEFAULT_PREFS)
+  const [prefs, setPrefs] = useState<UserPreferences>(() => {
+    if (typeof window === 'undefined') return DEFAULT_PREFS
+    return getPreferences() ?? DEFAULT_PREFS
+  })
   const [saved, setSaved] = useState(false)
-
-  useEffect(() => {
-    const stored = getPreferences()
-    if (stored) setPrefs(stored)
-  }, [])
 
   function set<K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) {
     setPrefs((prev) => ({ ...prev, [key]: value }))
     setSaved(false)
   }
 
-  function handleSave(e: React.FormEvent) {
+  function handleSave(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     savePreferences(prefs)
     setSaved(true)
