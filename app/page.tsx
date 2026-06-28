@@ -7,18 +7,18 @@ const FEATURED_SOURCES = SOURCES.filter((s) => s.featured)
 const STEPS = [
   {
     num: '01',
-    title: 'Tell us your trip',
-    body: 'Destination, dates, budget, and how you like to travel.',
+    title: 'Build a Travel Profile',
+    body: 'Set your trusted sources, budget, and travel style. Save different profiles for different trips — China Food Trip, Europe Luxury, Weekend Getaway.',
   },
   {
     num: '02',
-    title: 'Pick your trusted sources',
-    body: 'Reddit, Michelin, RedNote, YouTube — whoever you actually trust for travel tips.',
+    title: 'Tell us your trip',
+    body: 'Destination, dates, and pace. Your profile pre-fills the rest.',
   },
   {
     num: '03',
     title: 'Get a confident recommendation',
-    body: 'A Go / No-Go verdict, where to stay, what to eat, and a full day-by-day plan.',
+    body: 'A Go / No-Go verdict, where to stay, what to eat, and a full day-by-day plan — built around your sources.',
   },
 ]
 
@@ -35,8 +35,8 @@ export default function HomePage() {
           From &ldquo;Should we go?&rdquo;<br />to a flight booked.
         </h1>
         <p className="text-lg text-slate-500 max-w-lg mx-auto mb-2 leading-relaxed">
-          Skip the 10-tab research loop. Tell us where you want to go, pick the travel
-          communities you trust, and get a complete recommendation in under 30 minutes.
+          Create a Travel Profile with your trusted sources, budget, and travel style.
+          Tell us where you want to go — and get a personalized plan in under 30 minutes.
         </p>
         <p className="text-sm text-slate-400 mb-10">
           For spontaneous travelers. No sign-up required.
@@ -68,9 +68,9 @@ export default function HomePage() {
             visit the same city. Different plans.
           </h2>
           <p className="text-base text-slate-500 max-w-lg mx-auto leading-relaxed">
-            Just Go personalizes around the communities you already trust —
-            not a one-size-fits-all algorithm. Pick your sources, and your entire
-            plan reflects what you actually care about.
+            Your Travel Profile is built around the communities you trust —
+            not a one-size-fits-all algorithm. A Reddit profile and a Michelin profile
+            give completely different recommendations for the same city.
           </p>
         </div>
 

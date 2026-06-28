@@ -20,6 +20,7 @@ import type { TravelProfile } from '@/lib/types'
 const BUDGET_LABEL: Record<string, string> = {
   budget: 'Budget',
   midrange: 'Comfortable',
+  premium: 'Premium',
   luxury: 'Luxury',
 }
 
@@ -159,16 +160,24 @@ function ProfileListView({ profiles, onNew, onEdit, onDelete }: {
 
 // ─── Profile card ─────────────────────────────────────────────────────────────
 
+function getStyleSummary(profile: TravelProfile): string {
+  const parts: string[] = []
+  if (profile.hotelStyle !== 'any') parts.push(HOTEL_LABEL[profile.hotelStyle])
+  if (profile.foodStyle !== 'any') parts.push(FOOD_LABEL[profile.foodStyle])
+  return parts.join(' · ')
+}
+
 function ProfileCard({ profile, onEdit, onDelete }: {
   profile: TravelProfile
   onEdit: (p: TravelProfile) => void
   onDelete: (id: string) => void
 }) {
-  const profileSources = SOURCES.filter((s) => profile.trustedSources.includes(s.value)).slice(0, 3)
+  const profileSources = SOURCES.filter((s) => profile.trustedSources.includes(s.value))
   const topActivities = profile.activityStyle.slice(0, 3)
+  const styleSummary = getStyleSummary(profile)
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col gap-4 shadow-sm">
+    <div className="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col gap-3 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-base font-semibold text-slate-900 leading-snug">{profile.name || 'Untitled Profile'}</h3>
         <div className="flex items-center gap-2 shrink-0">
@@ -190,20 +199,20 @@ function ProfileCard({ profile, onEdit, onDelete }: {
         </div>
       </div>
 
-      <div className="text-xs text-slate-400 flex flex-wrap gap-x-3 gap-y-1">
-        <span>{BUDGET_LABEL[profile.budget] ?? profile.budget}</span>
-        <span>·</span>
-        <span>{HOTEL_LABEL[profile.hotelStyle] ?? profile.hotelStyle}</span>
-        <span>·</span>
-        <span>{FOOD_LABEL[profile.foodStyle] ?? profile.foodStyle}</span>
-      </div>
+      <span className="inline-flex w-fit rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
+        {BUDGET_LABEL[profile.budget] ?? profile.budget}
+      </span>
 
       {profileSources.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
           {profileSources.map((s) => (
-            <span key={s.value} className={`text-xs font-semibold ${s.nameColor}`}>{s.name}</span>
+            <span key={s.value} className={`text-sm font-semibold ${s.nameColor}`}>{s.name}</span>
           ))}
         </div>
+      )}
+
+      {styleSummary && (
+        <p className="text-xs text-slate-400">{styleSummary}</p>
       )}
 
       {topActivities.length > 0 && (
@@ -305,8 +314,8 @@ function ProfileEditView({ profile, onSave, onBack }: {
         </div>
 
         {/* Budget */}
-        <Section label="Budget">
-          <div className="grid grid-cols-3 gap-2.5">
+        <Section label="Budget" hint="Recommendations are adjusted for your destination.">
+          <div className="grid grid-cols-2 gap-2.5">
             {BUDGET_OPTIONS.map((opt) => (
               <TileButton
                 key={opt.value}
@@ -404,8 +413,8 @@ function Section({ label, hint, children }: { label: string; hint?: string; chil
   return (
     <div>
       <div className="mb-3">
-        <p className="text-sm font-medium text-slate-700">{label}</p>
-        {hint && <p className="text-xs text-slate-400 mt-0.5">{hint}</p>}
+        <p className="text-sm font-medium text-slate-700 mb-0.5">{label}</p>
+        {hint && <p className="text-xs text-slate-400">{hint}</p>}
       </div>
       {children}
     </div>

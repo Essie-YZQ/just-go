@@ -25,8 +25,11 @@ const PACE_OPTIONS = [
 const BUDGET_LABEL: Record<string, string> = {
   budget: 'Budget',
   midrange: 'Comfortable',
+  premium: 'Premium',
   luxury: 'Luxury',
 }
+
+const STEP_SHORT = ['Profile', 'Trip', 'Style', 'Sources']
 
 // ─── Default form ─────────────────────────────────────────────────────────────
 
@@ -137,22 +140,40 @@ export default function PlannerPage() {
     )
   }
 
-  const progress = ((step + 1) / STEP_LABELS.length) * 100
-
   return (
     <div className="mx-auto max-w-xl px-6 py-14">
 
-      {/* Progress */}
+      {/* Step indicator */}
       <div className="mb-12">
-        <div className="flex items-center justify-between mb-2.5">
-          <p className="text-xs text-slate-400">Step {step + 1} of {STEP_LABELS.length}</p>
-          <p className="text-xs font-semibold text-slate-600">{STEP_LABELS[step]}</p>
-        </div>
-        <div className="h-0.5 bg-slate-100 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-slate-900 rounded-full transition-all duration-400"
-            style={{ width: `${progress}%` }}
-          />
+        <div className="relative flex justify-between items-start">
+          {/* Track */}
+          <div className="absolute top-4 left-4 right-4 h-px bg-slate-100">
+            <div
+              className="h-full bg-slate-900 transition-all duration-500"
+              style={{ width: `${(step / (STEP_LABELS.length - 1)) * 100}%` }}
+            />
+          </div>
+
+          {STEP_SHORT.map((label, i) => {
+            const isDone = i < step
+            const isCurrent = i === step
+            return (
+              <div key={i} className="relative z-10 flex flex-col items-center gap-2">
+                <div className={`h-8 w-8 rounded-full border-2 flex items-center justify-center text-xs font-semibold transition-all duration-300 ${
+                  isDone || isCurrent
+                    ? 'bg-slate-900 border-slate-900 text-white'
+                    : 'bg-white border-slate-200 text-slate-400'
+                }`}>
+                  {isDone ? '✓' : i + 1}
+                </div>
+                <span className={`text-[10px] font-medium transition-colors ${
+                  isCurrent ? 'text-slate-700' : isDone ? 'text-slate-500' : 'text-slate-300'
+                }`}>
+                  {label}
+                </span>
+              </div>
+            )
+          })}
         </div>
       </div>
 
@@ -250,7 +271,7 @@ function StepProfile({ profiles, selectedProfileId, onSelect, error }: {
         <div className="flex flex-col gap-3">
           {profiles.map((p) => {
             const isSelected = selectedProfileId === p.id
-            const profileSources = SOURCES.filter((s) => p.trustedSources.includes(s.value)).slice(0, 3)
+            const profileSources = SOURCES.filter((s) => p.trustedSources.includes(s.value))
             return (
               <button
                 key={p.id}
@@ -264,19 +285,23 @@ function StepProfile({ profiles, selectedProfileId, onSelect, error }: {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 mb-1.5">{p.name}</p>
-                    <p className="text-xs text-slate-400 mb-3">
-                      {BUDGET_LABEL[p.budget] ?? p.budget}
-                      {p.activityStyle.length > 0 && (
-                        <> · {p.activityStyle.slice(0, 3).map((a) => a.replace('-', ' ')).join(', ')}</>
-                      )}
-                    </p>
+                    <div className="flex items-center gap-2 flex-wrap mb-2.5">
+                      <p className="text-sm font-semibold text-slate-900">{p.name}</p>
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                        {BUDGET_LABEL[p.budget] ?? p.budget}
+                      </span>
+                    </div>
                     {profileSources.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-x-3 gap-y-1 mb-2">
                         {profileSources.map((s) => (
-                          <span key={s.value} className={`text-xs font-semibold ${s.nameColor}`}>{s.name}</span>
+                          <span key={s.value} className={`text-sm font-semibold ${s.nameColor}`}>{s.name}</span>
                         ))}
                       </div>
+                    )}
+                    {p.activityStyle.length > 0 && (
+                      <p className="text-xs text-slate-400">
+                        {p.activityStyle.slice(0, 3).map((a) => a.replace('-', ' ')).join(' · ')}
+                      </p>
                     )}
                   </div>
                   <div className={`shrink-0 mt-0.5 h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all ${
@@ -342,6 +367,7 @@ function StepTrip({ form, errors, setField, durations }: {
           value={form.arrivalDate}
           onChange={(e) => setField('arrivalDate', e.target.value)}
           error={errors.arrivalDate}
+          hint="The day you plan to arrive at your destination."
         />
         <div>
           <p className="text-sm font-medium text-slate-700 mb-3">Trip length</p>
@@ -384,8 +410,9 @@ function StepStyle({ form, setField, toggleArray, paceOptions }: {
 
       {/* Budget */}
       <div>
-        <p className="text-sm font-medium text-slate-700 mb-3">Budget</p>
-        <div className="grid grid-cols-3 gap-2.5">
+        <p className="text-sm font-medium text-slate-700 mb-0.5">Budget</p>
+        <p className="text-xs text-slate-400 mb-3">Recommendations are adjusted for your destination.</p>
+        <div className="grid grid-cols-2 gap-2.5">
           {BUDGET_OPTIONS.map((opt) => (
             <button
               key={opt.value}

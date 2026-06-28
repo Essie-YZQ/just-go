@@ -2,10 +2,11 @@ import { InputHTMLAttributes } from 'react'
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
+  hint?: string
   error?: string
 }
 
-export function Input({ label, error, className = '', id, ...props }: InputProps) {
+export function Input({ label, hint, error, className = '', id, ...props }: InputProps) {
   const inputId = id || label?.toLowerCase().replace(/\s+/g, '-')
 
   return (
@@ -21,6 +22,7 @@ export function Input({ label, error, className = '', id, ...props }: InputProps
         {...props}
       />
       {error && <p className="text-xs text-red-500">{error}</p>}
+      {hint && !error && <p className="text-xs text-slate-400">{hint}</p>}
     </div>
   )
 }

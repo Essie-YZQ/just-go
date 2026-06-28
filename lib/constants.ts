@@ -113,9 +113,10 @@ export const SOURCES: SourceDefinition[] = [
 // ─── Shared option lists ──────────────────────────────────────────────────────
 
 export const BUDGET_OPTIONS = [
-  { value: 'budget', label: 'Budget', sub: 'Under $100 / night' },
-  { value: 'midrange', label: 'Comfortable', sub: '$100–250 / night' },
-  { value: 'luxury', label: 'Luxury', sub: '$250+ / night' },
+  { value: 'budget', label: 'Budget', sub: 'Flexible, value-focused' },
+  { value: 'midrange', label: 'Comfortable', sub: 'Good value, no compromises' },
+  { value: 'premium', label: 'Premium', sub: 'Curated, quality-first' },
+  { value: 'luxury', label: 'Luxury', sub: 'The finest, no limits' },
 ]
 
 export const HOTEL_STYLE_OPTIONS = [
