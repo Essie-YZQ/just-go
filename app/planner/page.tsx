@@ -31,6 +31,22 @@ const BUDGET_LABEL: Record<string, string> = {
 
 const STEP_SHORT = ['Profile', 'Trip', 'Style', 'Sources']
 
+// ─── Date helpers ─────────────────────────────────────────────────────────────
+
+function toDateStr(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function getToday(): string { return toDateStr(new Date()) }
+function getTomorrow(): string {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  return toDateStr(d)
+}
+
 // ─── Default form ─────────────────────────────────────────────────────────────
 
 const DEFAULT_FORM: TripFormData = {
@@ -58,7 +74,7 @@ export default function PlannerPage() {
   const [step, setStep] = useState(0)
   const [profiles] = useState<TravelProfile[]>(() => getProfiles())
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null)
-  const [form, setForm] = useState<TripFormData>(DEFAULT_FORM)
+  const [form, setForm] = useState<TripFormData>(() => ({ ...DEFAULT_FORM, arrivalDate: getTomorrow() }))
   const [generating, setGenerating] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -361,14 +377,36 @@ function StepTrip({ form, errors, setField, durations }: {
       </div>
 
       <div className="flex flex-col gap-4">
-        <Input
-          label="Arrival date"
-          type="date"
-          value={form.arrivalDate}
-          onChange={(e) => setField('arrivalDate', e.target.value)}
-          error={errors.arrivalDate}
-          hint="The day you plan to arrive at your destination."
-        />
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-sm font-medium text-slate-700">Arrival date</label>
+            <div className="flex gap-1.5">
+              {([{ label: 'Today', value: getToday() }, { label: 'Tomorrow', value: getTomorrow() }]).map((opt) => (
+                <button
+                  key={opt.label}
+                  type="button"
+                  onClick={() => setField('arrivalDate', opt.value)}
+                  className={`rounded-full border px-3 py-1 text-xs font-medium transition-all cursor-pointer ${
+                    form.arrivalDate === opt.value
+                      ? 'bg-slate-900 text-white border-slate-900'
+                      : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <input
+            type="date"
+            value={form.arrivalDate}
+            onChange={(e) => setField('arrivalDate', e.target.value)}
+            className={`w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-400 focus:outline-none transition-colors ${
+              errors.arrivalDate ? 'border-red-400' : 'border-slate-200'
+            }`}
+          />
+          {errors.arrivalDate && <p className="text-xs text-red-500 mt-1.5">{errors.arrivalDate}</p>}
+        </div>
         <div>
           <p className="text-sm font-medium text-slate-700 mb-3">Trip length</p>
           <div className="flex flex-wrap gap-2">
