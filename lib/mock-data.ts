@@ -1,7 +1,7 @@
 import type { TripFormData, TravelResult, Restaurant, Activity, DayPlan } from './types'
 
 const SOURCE_LABELS: Record<string, string> = {
-  xiaohongshu: 'Xiaohongshu',
+  rednote: 'RedNote',
   reddit: 'Reddit',
   'google-reviews': 'Google Reviews',
   eater: 'Eater',
@@ -12,7 +12,7 @@ const SOURCE_LABELS: Record<string, string> = {
 }
 
 function getPrimarySource(sources: string[]): string {
-  if (sources.includes('xiaohongshu')) return 'xiaohongshu'
+  if (sources.includes('rednote')) return 'rednote'
   if (sources.includes('michelin')) return 'michelin'
   if (sources.includes('eater')) return 'eater'
   if (sources.includes('reddit')) return 'reddit'
@@ -33,9 +33,9 @@ const DESTINATION_DATA: Record<string, (source: string, days: number) => TravelR
   tokyo: (source, days) => {
     const sourceLabel = SOURCE_LABELS[source] || 'General'
     const restaurantsBySource: Record<string, Restaurant[]> = {
-      xiaohongshu: [
+      rednote: [
         { name: 'Ichiran Ramen Shibuya', cuisine: 'Ramen', description: 'Solo dining booths, ultra-concentrated tonkotsu broth — a must-photograph moment.', priceRange: '¥', source: sourceLabel },
-        { name: 'Fuglen Tokyo', cuisine: 'Café', description: 'Norwegian coffee shop beloved on Xiaohongshu for its aesthetics and specialty brews.', priceRange: '¥', source: sourceLabel },
+        { name: 'Fuglen Tokyo', cuisine: 'Café', description: 'Norwegian coffee shop beloved on RedNote for its aesthetics and specialty brews.', priceRange: '¥', source: sourceLabel },
         { name: 'Afuri Ramen', cuisine: 'Yuzu Ramen', description: 'Light citrus broth trending heavily — perfect for the aesthetic food shot.', priceRange: '¥¥', source: sourceLabel },
       ],
       michelin: [
@@ -105,7 +105,7 @@ const DESTINATION_DATA: Record<string, (source: string, days: number) => TravelR
   paris: (source, days) => {
     const sourceLabel = SOURCE_LABELS[source] || 'General'
     const restaurantsBySource: Record<string, Restaurant[]> = {
-      xiaohongshu: [
+      rednote: [
         { name: 'Café de Flore', cuisine: 'French Café', description: 'Most photographed café in Paris — art deco interior, iconic terrace. Perfect for content.', priceRange: '€€', source: sourceLabel },
         { name: 'Pierre Hermé', cuisine: 'Patisserie', description: 'The "Picasso of Pastry" — must try the Ispahan macaron.', priceRange: '€', source: sourceLabel },
         { name: 'Chez L\'Ami Jean', cuisine: 'Basque Bistro', description: 'Loved on Chinese travel communities for generous portions and authentic atmosphere.', priceRange: '€€', source: sourceLabel },
@@ -175,7 +175,7 @@ const DESTINATION_DATA: Record<string, (source: string, days: number) => TravelR
   bali: (source, days) => {
     const sourceLabel = SOURCE_LABELS[source] || 'General'
     const restaurantsBySource: Record<string, Restaurant[]> = {
-      xiaohongshu: [
+      rednote: [
         { name: 'Potato Head Beach Club', cuisine: 'International', description: 'The most photographed beach club in Seminyak — iconic infinity pool, great cocktails.', priceRange: '$$', source: sourceLabel },
         { name: 'Locavore', cuisine: 'Modern Indonesian', description: 'Trending on Chinese travel communities — farm-to-table, stunning presentation.', priceRange: '$$$', source: sourceLabel },
         { name: 'Sari Organik', cuisine: 'Organic Balinese', description: 'Rice field café in Ubud — walk through paddy fields to get there.', priceRange: '$', source: sourceLabel },

@@ -63,7 +63,7 @@ Collect:
 Trusted Sources examples:
 
 * General recommendations
-* Xiaohongshu
+* RedNote
 * Reddit
 * Google Reviews
 * Local recommendations
@@ -155,7 +155,7 @@ Do NOT build:
 * Google Maps API
 * Expedia API
 * Booking.com API
-* Xiaohongshu integration
+* RedNote integration
 * Weather API
 * Database
 * Payment

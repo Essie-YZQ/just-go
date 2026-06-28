@@ -18,7 +18,7 @@ The Problem
 
 Planning a trip often takes longer than the trip itself.
 
-People constantly switch between Google, Reddit, Booking, Google Maps, TikTok, Xiaohongshu, YouTube, and many other websites before making a decision.
+People constantly switch between Google, Reddit, Booking, Google Maps, TikTok, RedNote, YouTube, and many other websites before making a decision.
 
 The biggest problem isn't creating an itinerary.
 
@@ -44,7 +44,7 @@ Different travelers trust different communities.
 
 For example:
 
-* A Chinese traveler may prefer recommendations inspired by Xiaohongshu.
+* A Chinese traveler may prefer recommendations inspired by RedNote.
 * A local foodie may prefer Reddit or Eater.
 * A museum lover may receive a completely different itinerary than a nightlife traveler.
 
@@ -70,7 +70,7 @@ Instead of using the same recommendations for everyone, Just Go should personali
 
 Examples include:
 
-* Xiaohongshu
+* RedNote
 * Reddit
 * Google Reviews
 * Eater

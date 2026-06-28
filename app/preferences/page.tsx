@@ -41,7 +41,7 @@ const CUISINE_OPTIONS = [
 
 const SOURCE_OPTIONS = [
   { value: 'general', label: 'General recommendations' },
-  { value: 'xiaohongshu', label: 'Xiaohongshu' },
+  { value: 'rednote', label: 'RedNote' },
   { value: 'reddit', label: 'Reddit' },
   { value: 'google-reviews', label: 'Google Reviews' },
   { value: 'eater', label: 'Eater' },
@@ -84,7 +84,7 @@ export default function PreferencesPage() {
     setSaved(false)
   }
 
-  function handleSave(e: React.FormEvent<HTMLFormElement>) {
+  function handleSave(e: { preventDefault(): void }) {
     e.preventDefault()
     savePreferences(prefs)
     setSaved(true)

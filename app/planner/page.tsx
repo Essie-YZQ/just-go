@@ -60,7 +60,7 @@ const INTEREST_OPTIONS = [
 
 const SOURCE_OPTIONS = [
   { value: 'general', label: 'General recommendations' },
-  { value: 'xiaohongshu', label: 'Xiaohongshu' },
+  { value: 'rednote', label: 'RedNote' },
   { value: 'reddit', label: 'Reddit' },
   { value: 'google-reviews', label: 'Google Reviews' },
   { value: 'eater', label: 'Eater' },
@@ -118,7 +118,7 @@ export default function PlannerPage() {
     return Object.keys(newErrors).length === 0
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
     if (!validate()) return
     setLoading(true)

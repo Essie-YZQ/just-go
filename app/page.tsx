@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 
-const SOURCES = ['Xiaohongshu', 'Reddit', 'Google Reviews', 'Eater', 'Michelin', 'YouTube', 'Local Blogs']
+const SOURCES = ['RedNote', 'Reddit', 'Google Reviews', 'Eater', 'Michelin', 'YouTube', 'Local Blogs']
 
 export default function HomePage() {
   return (
@@ -53,7 +53,7 @@ export default function HomePage() {
           Personalized by your trusted sources
         </p>
         <p className="text-sm text-slate-500 mb-8 max-w-md mx-auto">
-          A foodie on Reddit gets different picks than a traveler on Michelin or Xiaohongshu.
+          A foodie on Reddit gets different picks than a traveler on Michelin or RedNote.
           The same city. A completely different experience.
         </p>
         <div className="flex flex-wrap justify-center gap-2">
