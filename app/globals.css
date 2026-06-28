@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FAFAF8;
+  --background: #F9F9F7;
   --foreground: #0F172A;
 }
 
@@ -9,4 +9,25 @@ body {
   background: var(--background);
   color: var(--foreground);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: #0F172A;
+  color: #ffffff;
+}
+
+@keyframes step-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-step {
+  animation: step-enter 0.22s ease-out forwards;
 }
