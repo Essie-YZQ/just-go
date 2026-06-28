@@ -54,11 +54,13 @@ export interface TravelResult {
   bookingChecklist: string[]
 }
 
-export interface UserPreferences {
-  budget: string
-  favoriteCuisines: string[]
-  travelPace: string
-  transportationPreference: string
+export interface TravelProfile {
+  id: string
+  name: string
   trustedSources: string[]
-  interests: string[]
+  budget: string
+  hotelStyle: string
+  foodStyle: string
+  activityStyle: string[]
+  transportationPreference: string
 }

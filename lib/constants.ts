@@ -111,8 +111,33 @@ export const SOURCES: SourceDefinition[] = [
 ]
 
 // ─── Shared option lists ──────────────────────────────────────────────────────
-//
-// These are used by both the Planner and Preferences pages with identical values.
+
+export const BUDGET_OPTIONS = [
+  { value: 'budget', label: 'Budget', sub: 'Under $100 / night' },
+  { value: 'midrange', label: 'Comfortable', sub: '$100–250 / night' },
+  { value: 'luxury', label: 'Luxury', sub: '$250+ / night' },
+]
+
+export const HOTEL_STYLE_OPTIONS = [
+  { value: 'any', label: 'No preference', sub: 'Flexible on accommodation type' },
+  { value: 'hostel', label: 'Hostel & Guesthouse', sub: 'Social, budget-friendly' },
+  { value: 'boutique', label: 'Boutique', sub: 'Design-led, character-filled' },
+  { value: 'luxury', label: 'Luxury', sub: '5-star hotels and resorts' },
+]
+
+export const FOOD_STYLE_OPTIONS = [
+  { value: 'any', label: 'No preference', sub: 'Open to anything' },
+  { value: 'street-food', label: 'Street & Local', sub: 'Markets, stalls, hawkers' },
+  { value: 'casual', label: 'Casual Dining', sub: 'Neighborhood restaurants' },
+  { value: 'fine-dining', label: 'Fine Dining', sub: 'Elevated, curated experiences' },
+]
+
+export const TRANSPORT_OPTIONS = [
+  { value: 'public', label: 'Public Transit' },
+  { value: 'rental', label: 'Rental Car' },
+  { value: 'rideshare', label: 'Ride-share' },
+  { value: 'walk', label: 'Walk / Bike' },
+]
 
 export const INTEREST_OPTIONS = [
   { value: 'food', label: 'Food & Dining' },

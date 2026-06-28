@@ -1,24 +1,20 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/Input'
 import { Spinner } from '@/components/ui/Spinner'
-import { saveTripData, getPreferences } from '@/lib/storage'
-import { SOURCES, INTEREST_OPTIONS } from '@/lib/constants'
-import type { TripFormData } from '@/lib/types'
+import { SourceCardGrid } from '@/components/SourceCardGrid'
+import { saveTripData, getProfiles } from '@/lib/storage'
+import { SOURCES, INTEREST_OPTIONS, BUDGET_OPTIONS, TRANSPORT_OPTIONS } from '@/lib/constants'
+import type { TripFormData, TravelProfile } from '@/lib/types'
 
 // ─── Page-local constants ─────────────────────────────────────────────────────
 
-const STEP_LABELS = ['The Trip', 'Your Style', 'Your Sources']
+const STEP_LABELS = ['Choose a Profile', 'The Trip', 'Your Style', 'Your Sources']
 
 const TRIP_DURATIONS = ['2', '3', '4', '5', '7', '10', '14']
-
-const BUDGET_OPTIONS = [
-  { value: 'budget', label: 'Budget', sub: 'Under $100 / night' },
-  { value: 'midrange', label: 'Comfortable', sub: '$100–250 / night' },
-  { value: 'luxury', label: 'Luxury', sub: '$250+ / night' },
-]
 
 const PACE_OPTIONS = [
   { value: 'relaxed', label: 'Take it easy', sub: 'A few highlights, lots of downtime' },
@@ -26,14 +22,13 @@ const PACE_OPTIONS = [
   { value: 'fast', label: 'See everything', sub: 'Pack in as much as possible' },
 ]
 
-const TRANSPORT_OPTIONS = [
-  { value: 'public', label: 'Public Transit' },
-  { value: 'rental', label: 'Rental Car' },
-  { value: 'rideshare', label: 'Ride-share' },
-  { value: 'walk', label: 'Walk / Bike' },
-]
+const BUDGET_LABEL: Record<string, string> = {
+  budget: 'Budget',
+  midrange: 'Comfortable',
+  luxury: 'Luxury',
+}
 
-// ─── Default form & initializer ──────────────────────────────────────────────
+// ─── Default form ─────────────────────────────────────────────────────────────
 
 const DEFAULT_FORM: TripFormData = {
   destination: '',
@@ -48,20 +43,6 @@ const DEFAULT_FORM: TripFormData = {
   trustedSources: [],
 }
 
-function getInitialForm(): TripFormData {
-  if (typeof window === 'undefined') return DEFAULT_FORM
-  const prefs = getPreferences()
-  if (!prefs) return DEFAULT_FORM
-  return {
-    ...DEFAULT_FORM,
-    hotelBudget: prefs.budget || DEFAULT_FORM.hotelBudget,
-    transportationPreference: prefs.transportationPreference || DEFAULT_FORM.transportationPreference,
-    travelPace: prefs.travelPace || DEFAULT_FORM.travelPace,
-    travelInterests: prefs.interests?.length ? prefs.interests : DEFAULT_FORM.travelInterests,
-    trustedSources: prefs.trustedSources?.length ? prefs.trustedSources : DEFAULT_FORM.trustedSources,
-  }
-}
-
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type SetField = <K extends keyof TripFormData>(key: K, value: TripFormData[K]) => void
@@ -72,7 +53,9 @@ type ToggleArray = (key: 'travelInterests' | 'trustedSources', value: string) =>
 export default function PlannerPage() {
   const router = useRouter()
   const [step, setStep] = useState(0)
-  const [form, setForm] = useState<TripFormData>(getInitialForm)
+  const [profiles] = useState<TravelProfile[]>(() => getProfiles())
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null)
+  const [form, setForm] = useState<TripFormData>(DEFAULT_FORM)
   const [generating, setGenerating] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -89,8 +72,27 @@ export default function PlannerPage() {
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: '' }))
   }
 
+  function applyProfile(profile: TravelProfile) {
+    setSelectedProfileId(profile.id)
+    setForm((prev) => ({
+      ...prev,
+      hotelBudget: profile.budget,
+      transportationPreference: profile.transportationPreference,
+      travelInterests: profile.activityStyle,
+      trustedSources: profile.trustedSources,
+      foodPreference: profile.foodStyle,
+    }))
+    if (errors.profile) setErrors((prev) => ({ ...prev, profile: '' }))
+  }
+
   function validateStep(): boolean {
     if (step === 0) {
+      if (!selectedProfileId) {
+        setErrors({ profile: 'Please choose a travel profile to continue.' })
+        return false
+      }
+    }
+    if (step === 1) {
       const errs: Record<string, string> = {}
       if (!form.destination.trim()) errs.destination = 'Please enter a destination.'
       if (!form.departureCity.trim()) errs.departureCity = 'Please enter your departure city.'
@@ -98,7 +100,7 @@ export default function PlannerPage() {
       setErrors(errs)
       return Object.keys(errs).length === 0
     }
-    if (step === 2 && form.trustedSources.length === 0) {
+    if (step === 3 && form.trustedSources.length === 0) {
       setErrors({ trustedSources: 'Pick at least one source to continue.' })
       return false
     }
@@ -154,9 +156,17 @@ export default function PlannerPage() {
         </div>
       </div>
 
-      {/* Step content — key triggers re-mount + CSS animation */}
+      {/* Step content */}
       <div className="animate-step" key={step}>
         {step === 0 && (
+          <StepProfile
+            profiles={profiles}
+            selectedProfileId={selectedProfileId}
+            onSelect={applyProfile}
+            error={errors.profile}
+          />
+        )}
+        {step === 1 && (
           <StepTrip
             form={form}
             errors={errors}
@@ -164,18 +174,15 @@ export default function PlannerPage() {
             durations={TRIP_DURATIONS}
           />
         )}
-        {step === 1 && (
+        {step === 2 && (
           <StepStyle
             form={form}
             setField={setField}
             toggleArray={toggleArray}
-            budgetOptions={BUDGET_OPTIONS}
             paceOptions={PACE_OPTIONS}
-            transportOptions={TRANSPORT_OPTIONS}
-            interestOptions={INTEREST_OPTIONS}
           />
         )}
-        {step === 2 && (
+        {step === 3 && (
           <StepSources
             form={form}
             toggleArray={toggleArray}
@@ -195,7 +202,7 @@ export default function PlannerPage() {
             ← Back
           </button>
         )}
-        {step < 2 ? (
+        {step < 3 ? (
           <button
             type="button"
             onClick={goNext}
@@ -213,6 +220,85 @@ export default function PlannerPage() {
           </button>
         )}
       </div>
+    </div>
+  )
+}
+
+// ─── Step 0: Choose a Profile ─────────────────────────────────────────────────
+
+function StepProfile({ profiles, selectedProfileId, onSelect, error }: {
+  profiles: TravelProfile[]
+  selectedProfileId: string | null
+  onSelect: (p: TravelProfile) => void
+  error?: string
+}) {
+  return (
+    <div className="flex flex-col gap-8">
+      <div>
+        <h2 className="text-2xl font-semibold text-slate-900 mb-1.5">Start with a profile</h2>
+        <p className="text-sm text-slate-400">Your profile pre-fills your preferences. You can adjust anything in the next steps.</p>
+      </div>
+
+      {profiles.length === 0 ? (
+        <div className="text-center py-16 border-2 border-dashed border-slate-200 rounded-2xl">
+          <p className="text-slate-400 text-sm mb-3">No profiles yet.</p>
+          <Link href="/profiles" className="text-sm font-medium text-slate-700 underline underline-offset-4">
+            Create a travel profile →
+          </Link>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {profiles.map((p) => {
+            const isSelected = selectedProfileId === p.id
+            const profileSources = SOURCES.filter((s) => p.trustedSources.includes(s.value)).slice(0, 3)
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => onSelect(p)}
+                className={`rounded-2xl border-2 p-5 text-left transition-all cursor-pointer w-full ${
+                  isSelected
+                    ? 'border-slate-900 bg-white'
+                    : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-900 mb-1.5">{p.name}</p>
+                    <p className="text-xs text-slate-400 mb-3">
+                      {BUDGET_LABEL[p.budget] ?? p.budget}
+                      {p.activityStyle.length > 0 && (
+                        <> · {p.activityStyle.slice(0, 3).map((a) => a.replace('-', ' ')).join(', ')}</>
+                      )}
+                    </p>
+                    {profileSources.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {profileSources.map((s) => (
+                          <span key={s.value} className={`text-xs font-semibold ${s.nameColor}`}>{s.name}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className={`shrink-0 mt-0.5 h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                    isSelected ? 'bg-slate-900 border-slate-900' : 'border-slate-300'
+                  }`}>
+                    {isSelected && <span className="text-white text-[10px] font-bold leading-none">✓</span>}
+                  </div>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      <Link
+        href="/profiles"
+        className="text-sm text-slate-400 hover:text-slate-700 transition-colors text-center"
+      >
+        + Manage profiles
+      </Link>
+
+      {error && <p className="text-sm text-red-500 text-center">{error}</p>}
     </div>
   )
 }
@@ -283,30 +369,24 @@ function StepTrip({ form, errors, setField, durations }: {
 
 // ─── Step 2: Your Style ───────────────────────────────────────────────────────
 
-type TileOption = { value: string; label: string; sub: string }
-type ChipOption = { value: string; label: string }
-
-function StepStyle({ form, setField, toggleArray, budgetOptions, paceOptions, transportOptions, interestOptions }: {
+function StepStyle({ form, setField, toggleArray, paceOptions }: {
   form: TripFormData
   setField: SetField
   toggleArray: ToggleArray
-  budgetOptions: TileOption[]
-  paceOptions: TileOption[]
-  transportOptions: ChipOption[]
-  interestOptions: ChipOption[]
+  paceOptions: { value: string; label: string; sub: string }[]
 }) {
   return (
     <div className="flex flex-col gap-9">
       <div>
         <h2 className="text-2xl font-semibold text-slate-900 mb-1.5">How do you like to travel?</h2>
-        <p className="text-sm text-slate-400">We&apos;ll tailor the recommendations to match your style.</p>
+        <p className="text-sm text-slate-400">Pre-filled from your profile — adjust anything you like.</p>
       </div>
 
       {/* Budget */}
       <div>
         <p className="text-sm font-medium text-slate-700 mb-3">Budget</p>
         <div className="grid grid-cols-3 gap-2.5">
-          {budgetOptions.map((opt) => (
+          {BUDGET_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               type="button"
@@ -350,7 +430,7 @@ function StepStyle({ form, setField, toggleArray, budgetOptions, paceOptions, tr
       <div>
         <p className="text-sm font-medium text-slate-700 mb-3">Getting around</p>
         <div className="flex flex-wrap gap-2">
-          {transportOptions.map((opt) => (
+          {TRANSPORT_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               type="button"
@@ -372,7 +452,7 @@ function StepStyle({ form, setField, toggleArray, budgetOptions, paceOptions, tr
         <p className="text-sm font-medium text-slate-700 mb-1">You&apos;re into</p>
         <p className="text-xs text-slate-400 mb-3">Select all that apply</p>
         <div className="flex flex-wrap gap-2">
-          {interestOptions.map((opt) => (
+          {INTEREST_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               type="button"
@@ -406,37 +486,14 @@ function StepSources({ form, toggleArray, error }: {
           Who do you trust for travel tips?
         </h2>
         <p className="text-sm text-slate-400">
-          This is the most important question. It shapes everything you&apos;ll see.
+          Pre-filled from your profile — this shapes everything you&apos;ll see.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {SOURCES.map((s) => {
-          const selected = form.trustedSources.includes(s.value)
-          return (
-            <button
-              key={s.value}
-              type="button"
-              onClick={() => toggleArray('trustedSources', s.value)}
-              className={`rounded-2xl border-2 p-5 text-left transition-all cursor-pointer ${
-                selected
-                  ? `${s.selectedBg} ${s.selectedBorder}`
-                  : 'bg-white border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <p className={`text-sm font-bold mb-1 ${selected ? s.nameColor : 'text-slate-800'}`}>
-                {s.name}
-              </p>
-              <p className={`text-sm font-medium mb-1 ${selected ? (s.taglineColor ?? 'text-slate-700') : 'text-slate-600'}`}>
-                {s.tagline}
-              </p>
-              <p className={`text-xs leading-relaxed ${selected ? (s.descColor ?? 'text-slate-500') : 'text-slate-400'}`}>
-                {s.desc}
-              </p>
-            </button>
-          )
-        })}
-      </div>
+      <SourceCardGrid
+        selected={form.trustedSources}
+        onToggle={(value) => toggleArray('trustedSources', value)}
+      />
 
       {error && <p className="text-sm text-red-500">{error}</p>}
     </div>

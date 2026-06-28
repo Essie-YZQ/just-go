@@ -1,7 +1,44 @@
-import type { TripFormData, UserPreferences } from './types'
+import type { TripFormData, TravelProfile } from './types'
 
 const TRIP_DATA_KEY = 'just_go_trip_data'
-const PREFERENCES_KEY = 'just_go_preferences'
+const PROFILES_KEY = 'just_go_profiles'
+
+// ─── Default profiles (seeded on first access) ───────────────────────────────
+
+const DEFAULT_PROFILES: TravelProfile[] = [
+  {
+    id: 'profile-china-food',
+    name: 'China Food Trip',
+    trustedSources: ['rednote', 'michelin'],
+    budget: 'midrange',
+    hotelStyle: 'boutique',
+    foodStyle: 'street-food',
+    activityStyle: ['food', 'art', 'photography'],
+    transportationPreference: 'public',
+  },
+  {
+    id: 'profile-europe-luxury',
+    name: 'Europe Luxury',
+    trustedSources: ['michelin', 'eater'],
+    budget: 'luxury',
+    hotelStyle: 'luxury',
+    foodStyle: 'fine-dining',
+    activityStyle: ['museums', 'art', 'history'],
+    transportationPreference: 'rideshare',
+  },
+  {
+    id: 'profile-weekend',
+    name: 'Weekend Getaway',
+    trustedSources: ['reddit', 'google-reviews'],
+    budget: 'budget',
+    hotelStyle: 'any',
+    foodStyle: 'any',
+    activityStyle: ['nature', 'adventure', 'beach'],
+    transportationPreference: 'rental',
+  },
+]
+
+// ─── Trip data ────────────────────────────────────────────────────────────────
 
 export function saveTripData(data: TripFormData): void {
   if (typeof window === 'undefined') return
@@ -19,13 +56,32 @@ export function clearTripData(): void {
   localStorage.removeItem(TRIP_DATA_KEY)
 }
 
-export function savePreferences(prefs: UserPreferences): void {
-  if (typeof window === 'undefined') return
-  localStorage.setItem(PREFERENCES_KEY, JSON.stringify(prefs))
+// ─── Travel Profiles ──────────────────────────────────────────────────────────
+
+export function getProfiles(): TravelProfile[] {
+  if (typeof window === 'undefined') return DEFAULT_PROFILES
+  const raw = localStorage.getItem(PROFILES_KEY)
+  if (!raw) {
+    localStorage.setItem(PROFILES_KEY, JSON.stringify(DEFAULT_PROFILES))
+    return DEFAULT_PROFILES
+  }
+  return JSON.parse(raw) as TravelProfile[]
 }
 
-export function getPreferences(): UserPreferences | null {
-  if (typeof window === 'undefined') return null
-  const raw = localStorage.getItem(PREFERENCES_KEY)
-  return raw ? JSON.parse(raw) : null
+export function saveProfile(profile: TravelProfile): void {
+  if (typeof window === 'undefined') return
+  const profiles = getProfiles()
+  const idx = profiles.findIndex((p) => p.id === profile.id)
+  if (idx >= 0) {
+    profiles[idx] = profile
+  } else {
+    profiles.push(profile)
+  }
+  localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles))
+}
+
+export function deleteProfile(id: string): void {
+  if (typeof window === 'undefined') return
+  const profiles = getProfiles().filter((p) => p.id !== id)
+  localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles))
 }

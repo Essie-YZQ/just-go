@@ -23,8 +23,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/planner" className="text-sm text-slate-600 hover:text-slate-900 transition-colors">
                 Plan a Trip
               </Link>
-              <Link href="/preferences" className="text-sm text-slate-600 hover:text-slate-900 transition-colors">
-                Preferences
+              <Link href="/profiles" className="text-sm text-slate-600 hover:text-slate-900 transition-colors">
+                Travel Profiles
               </Link>
             </nav>
           </div>
