@@ -129,25 +129,27 @@ export default function ResultsPage() {
       </div>
 
       {/* ── 2. Why This Plan ── */}
-      <section className="mb-12">
-        <SectionHeading label="Why This Plan" />
-        <div className="bg-slate-50 rounded-2xl border border-slate-100 p-6">
-          <p className="text-sm text-slate-700 leading-relaxed mb-5">
-            {result.whyThisPlan.summary}
-          </p>
-          <div className="flex flex-col gap-3">
-            {result.whyThisPlan.bullets.map((bullet, i) => (
-              <div key={i} className="flex gap-3">
-                <span className="text-slate-300 shrink-0 mt-0.5 font-medium">→</span>
-                <p className="text-sm text-slate-600 leading-relaxed">{bullet}</p>
-              </div>
-            ))}
+      {result.whyThisPlan && (
+        <section className="mb-12">
+          <SectionHeading label="Why This Plan" />
+          <div className="bg-slate-50 rounded-2xl border border-slate-100 p-6">
+            <p className="text-sm text-slate-700 leading-relaxed mb-5">
+              {result.whyThisPlan.summary}
+            </p>
+            <div className="flex flex-col gap-3">
+              {result.whyThisPlan.bullets.map((bullet, i) => (
+                <div key={i} className="flex gap-3">
+                  <span className="text-slate-300 shrink-0 mt-0.5 font-medium">→</span>
+                  <p className="text-sm text-slate-600 leading-relaxed">{bullet}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── 3. Source Intelligence ── */}
-      {result.sourceIntelligence.length > 0 && (
+      {result.sourceIntelligence && result.sourceIntelligence.length > 0 && (
         <section className="mb-12">
           <SectionHeading label="Source Intelligence" />
           <p className="text-xs text-slate-400 mb-4 -mt-2">
@@ -249,17 +251,19 @@ export default function ResultsPage() {
         </section>
 
         {/* ── 5. Alternative Versions ── */}
-        <section>
-          <SectionHeading label="Other Angles to Consider" />
-          <p className="text-xs text-slate-400 mb-4 -mt-2">
-            Different ways to approach this trip — static previews for now.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {result.alternativeVersions.map((alt, i) => (
-              <AlternativeCard key={i} alt={alt} />
-            ))}
-          </div>
-        </section>
+        {result.alternativeVersions && result.alternativeVersions.length > 0 && (
+          <section>
+            <SectionHeading label="Other Angles to Consider" />
+            <p className="text-xs text-slate-400 mb-4 -mt-2">
+              Different ways to approach this trip — static previews for now.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {result.alternativeVersions.map((alt, i) => (
+                <AlternativeCard key={i} alt={alt} />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Plan B */}
         <section>
