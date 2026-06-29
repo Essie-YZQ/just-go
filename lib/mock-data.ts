@@ -210,13 +210,15 @@ const DESTINATION_DATA: Record<string, (source: string, days: number, tripData: 
     }
 
     const alternativeVersions: AlternativeVersion[] = [
-      { title: 'Budget-Friendly Tokyo', description: 'Same neighborhoods — ramen shops, conbini culture, free temples, and covered markets. Tokyo is one of the best budget cities in the world.' },
-      { title: 'Deep Food Focus', description: 'Every day anchored by eating: Tsukiji breakfast, depachika lunch, ramen at Kikanbo, and omakase dinner. Two to three food stops per half-day.' },
-      { title: 'Rainy Day Version', description: 'teamLab Borderless, underground Shinjuku food halls, Shibuya shopping malls, and Akihabara. Rain in Tokyo is never a problem.' },
+      { title: 'Save Money', tag: 'Budget', description: 'Ramen counters, conbini meals, free temples, covered markets. Tokyo rewards budget travelers more than almost any city in the world.' },
+      { title: 'Food Lover Route', tag: 'Dining', description: 'Every half-day anchored by a meal: Tsukiji breakfast, depachika lunch, Kikanbo ramen, and one omakase dinner. No tourist sites required.' },
+      { title: 'Instagram Route', tag: 'Visual', description: 'Senso-ji at dawn, Shibuya Sky at dusk, teamLab for the interior shots, and Harajuku for the street style. Tokyo is endlessly photogenic.' },
+      { title: 'Rainy Day Version', tag: 'Indoor', description: 'teamLab Borderless, underground Shinjuku food halls, Akihabara, and covered shopping arcades. Tokyo is one of the best cities in the world on a rainy day.' },
     ]
 
     return {
       destination: 'Tokyo',
+      justGoRecommendation: 'Spend more on food than your hotel. Tokyo\'s ¥3,000 ramen counters and ¥18,000 lunch omakase will outlast any hotel room in your memory. Shinjuku and Shibuya have excellent mid-range business hotels — save the budget for one truly great meal.',
       goNoGo: 'GO',
       confidence: 'High',
       goNoGoReason: `Tokyo is one of the most visitor-ready cities in the world — exceptional public transit, world-class food at every price point, and an infinite variety of neighborhoods. Based on your ${sourceLabel} profile, you'll find curated spots that match exactly what you're looking for.`,
@@ -358,13 +360,15 @@ const DESTINATION_DATA: Record<string, (source: string, days: number, tripData: 
     }
 
     const alternativeVersions: AlternativeVersion[] = [
-      { title: 'Budget-Friendly Paris', description: 'Bouillon Chartier for dinner, L\'As du Fallafel for lunch, free museum Sundays, and picnics on the Seine. Paris is surprisingly affordable when you know where to go.' },
-      { title: 'Pure Food Itinerary', description: 'Every day anchored by a destination restaurant: market breakfast, arrondissement bistro lunch, and a reservation at Septime or similar. No tourist sites — food only.' },
-      { title: 'Rainy Day Version', description: 'Covered passages of Paris (Galerie Vivienne, Passage des Panoramas), the Musée d\'Orsay, and afternoon tea at Angelina. Paris has perfected the indoor afternoon.' },
+      { title: 'Save Money', tag: 'Budget', description: 'Bouillon Chartier for dinner, L\'As du Fallafel for lunch, free museum Sundays, and Seine picnics. Paris is shockingly affordable when you know where to go.' },
+      { title: 'Food Lover Route', tag: 'Dining', description: 'Every day anchored by a destination restaurant: market breakfast, arrondissement bistro lunch, and a reservation at Septime or similar. No tourist sites — food only.' },
+      { title: 'Instagram Route', tag: 'Visual', description: 'Louvre Pyramid at opening, boulangerie corner shot, Trocadéro at golden hour, and Montmartre at dusk. Paris is the most photographed city on earth for a reason.' },
+      { title: 'Rainy Day Version', tag: 'Indoor', description: 'Covered passages of Paris, Musée d\'Orsay, and afternoon tea at Angelina. Paris has perfected the indoor afternoon — rain barely changes the plan.' },
     ]
 
     return {
       destination: 'Paris',
+      justGoRecommendation: 'Skip the Eiffel Tower queue — go to the Trocadéro instead. Same view, better photo angle, free, and zero wait time. Use that hour for a second glass of wine at a Saint-Germain bistro. You\'ll enjoy the trip more.',
       goNoGo: 'GO',
       confidence: 'High',
       goNoGoReason: `Paris rewards visitors who go with a plan. Crowds at landmarks can be intense, but the city's neighborhoods have an energy that's impossible to replicate. Based on your ${sourceLabel} profile, you'll find spots well beyond the tourist trail.`,
@@ -490,13 +494,15 @@ const DESTINATION_DATA: Record<string, (source: string, days: number, tripData: 
     }
 
     const alternativeVersions: AlternativeVersion[] = [
-      { title: 'Budget-Friendly Bali', description: 'Warungs over beach clubs, shared scooter over private driver, rice terrace guesthouse over resort. Bali is exceptional at every budget level.' },
-      { title: 'Wellness & Retreat Focus', description: 'Morning yoga in Ubud, afternoon cooking class, evening sound bath. Restructured around rest and renewal rather than sightseeing.' },
-      { title: 'Rainy Season Version', description: 'Indoor temple visits, rice terrace walks in the rain (genuinely beautiful), and spa days. Bali\'s green season is lush — you just need waterproof sandals.' },
+      { title: 'Save Money', tag: 'Budget', description: 'Warungs over beach clubs, shared scooter over private driver, rice terrace guesthouse over resort. Bali is extraordinary value at every price level.' },
+      { title: 'Food Lover Route', tag: 'Dining', description: 'Suckling pig at Ibu Oka, fish at Warung Mak Beng, cooking class in Ubud, and dinner at Locavore. Every meal a destination. No landmarks required.' },
+      { title: 'Instagram Route', tag: 'Visual', description: 'Mount Batur sunrise, Tegallalang in morning mist, Tanah Lot at golden hour, and Potato Head Beach Club for the pool shot. Bali is built for visual storytelling.' },
+      { title: 'Rainy Day Version', tag: 'Indoor', description: 'Temple visits in the rain (genuinely atmospheric), Ubud spa days, cooking classes, and silver jewelry workshops. Bali\'s green season is lush and uncrowded.' },
     ]
 
     return {
       destination: 'Bali',
+      justGoRecommendation: 'Split your stay: 3 nights in Ubud, the rest in Canggu or Seminyak. Spending a full week in only one area misses what makes Bali remarkable. The contrast between rice terraces and beach clubs is the whole point of the island.',
       goNoGo: 'GO',
       confidence: 'High',
       goNoGoReason: `Bali consistently delivers for all types of travelers — spiritual retreats, beach clubs, world-class food, and rice terrace hikes are all within reach. Based on your ${sourceLabel} profile, there's an experience perfectly matched to your style.`,
@@ -600,10 +606,12 @@ function buildGenericResult(destination: string, source: string, days: number, t
     ],
     itinerary: buildItinerary(days, morning, afternoon, evening),
     alternativeVersions: [
-      { title: 'Budget-Friendly Version', description: 'Same destination, value-focused picks — local markets over restaurants, public transit over taxis, guesthouses over hotels.' },
-      { title: 'Food-First Itinerary', description: 'Every day anchored by a food experience — morning market, lunch at a local institution, dinner at the destination\'s most recommended restaurant.' },
-      { title: 'Slow Travel Version', description: 'Fewer stops, deeper experiences. Two neighborhoods instead of five, one great restaurant instead of three, one long museum visit over a rushed circuit.' },
+      { title: 'Save Money', tag: 'Budget', description: 'Same destination, value-focused picks — local markets over restaurants, public transit over taxis, guesthouses over hotels.' },
+      { title: 'Food Lover Route', tag: 'Dining', description: 'Every day anchored by a food experience — morning market, lunch at a local institution, dinner at the destination\'s best restaurant.' },
+      { title: 'Instagram Route', tag: 'Visual', description: 'Focused on the most visually distinctive spots — architecture, markets, viewpoints, and the neighborhoods that look like nowhere else.' },
+      { title: 'Rainy Day Version', tag: 'Indoor', description: 'Museums, covered markets, cafés, and galleries. Every destination has a great indoor version — this is it.' },
     ],
+    justGoRecommendation: `Before your first full day, walk one neighborhood without a plan. Most travelers over-schedule Day 1. The best discovery of any trip is usually accidental — and it almost always happens on foot.`,
     backupPlan: 'Research nearby day trips — most destinations have a hidden gem within 1–2 hours that most tourists miss.',
     bookingChecklist: [
       `Book flights to ${destination}`,

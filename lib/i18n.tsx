@@ -135,7 +135,7 @@ const translations = {
 
     // Results — Loading & structure
     'results.loading': 'Loading your travel plan...',
-    'results.eyebrow': 'Your travel plan',
+    'results.eyebrow': 'Your Just Go Plan',
     'results.confidence': '{level} Confidence',
     'results.goRecommended': 'Recommended',
     'results.goNotRecommended': 'Not recommended',
@@ -147,14 +147,19 @@ const translations = {
     'results.whyThisPlan': 'Why This Plan',
     'results.sourceIntel': 'Source Intelligence',
     'results.sourceIntel.sub': 'How each trusted source shaped this plan.',
-    'results.whereToStay': 'Where to Stay',
+    'results.highlights': 'Highlights',
+    'results.tab.stay': 'Stay',
+    'results.tab.eat': 'Eat',
+    'results.tab.do': 'Do',
     'results.gettingThere': 'Getting There',
-    'results.whereToEat': 'Where to Eat',
-    'results.whatToDo': 'What to Do',
     'results.itinerary': 'Your Itinerary',
+    'results.viewFullItinerary': 'View full itinerary',
+    'results.collapseItinerary': 'Collapse',
+    'results.moreDays': '{n} more days',
+    'results.justGoReco': 'Just Go Recommendation',
     'results.alternatives': 'Other Angles to Consider',
-    'results.alternatives.sub': 'Different ways to approach this trip — static previews for now.',
-    'results.previewBtn': 'Preview version',
+    'results.alternatives.sub': 'The same trip, approached differently.',
+    'results.comingSoon': 'Coming soon',
     'results.planB': 'Plan B',
     'results.beforeYouBook': 'Before You Book',
 
@@ -168,8 +173,9 @@ const translations = {
     'results.afternoon': 'Afternoon',
     'results.evening': 'Evening',
 
-    // Results — Footer
-    'results.adjustPrefs': '← Adjust preferences',
+    // Results — Actions
+    'results.savePlan': 'Save Plan',
+    'results.editPrefs': 'Edit Preferences',
     'results.mvpNote': 'MVP v1 · Real AI integration coming in v2',
 
     // Budget options
@@ -389,7 +395,7 @@ const translations = {
 
     // Results — Loading & structure
     'results.loading': '正在加载你的旅行计划...',
-    'results.eyebrow': '你的旅行计划',
+    'results.eyebrow': 'Your Just Go Plan',
     'results.confidence': '{level} 置信度',
     'results.goRecommended': '推荐出行',
     'results.goNotRecommended': '暂不推荐',
@@ -401,14 +407,19 @@ const translations = {
     'results.whyThisPlan': '为什么推荐这个计划',
     'results.sourceIntel': '信息源分析',
     'results.sourceIntel.sub': '每个信任来源是如何影响这份计划的。',
-    'results.whereToStay': '住在哪里',
+    'results.highlights': '精选亮点',
+    'results.tab.stay': '住宿',
+    'results.tab.eat': '餐饮',
+    'results.tab.do': '体验',
     'results.gettingThere': '如何抵达',
-    'results.whereToEat': '吃什么',
-    'results.whatToDo': '玩什么',
     'results.itinerary': '每日行程',
-    'results.alternatives': '其他方案参考',
-    'results.alternatives.sub': '从不同角度规划这趟旅行 — 目前为预览版。',
-    'results.previewBtn': '预览版本',
+    'results.viewFullItinerary': '查看完整行程',
+    'results.collapseItinerary': '收起',
+    'results.moreDays': '还有 {n} 天',
+    'results.justGoReco': 'Just Go 顾问建议',
+    'results.alternatives': '换一种玩法',
+    'results.alternatives.sub': '同一目的地，不同的旅行方式。',
+    'results.comingSoon': '即将推出',
     'results.planB': '备选方案',
     'results.beforeYouBook': '预订前清单',
 
@@ -422,8 +433,9 @@ const translations = {
     'results.afternoon': '下午',
     'results.evening': '晚上',
 
-    // Results — Footer
-    'results.adjustPrefs': '← 调整偏好',
+    // Results — Actions
+    'results.savePlan': '保存计划',
+    'results.editPrefs': '调整偏好',
     'results.mvpNote': 'MVP v1 · v2 将接入真实 AI',
 
     // Budget options

@@ -19,12 +19,16 @@ type PageData = {
   arrivalDate: string
 }
 
+type HighlightTab = 'stay' | 'eat' | 'do'
+
 export default function ResultsPage() {
   const router = useRouter()
   const t = useT()
   const { lang } = useLanguage()
   const [pageData, setPageData] = useState<PageData | null>(null)
   const [checked, setChecked] = useState<Set<number>>(new Set())
+  const [highlightTab, setHighlightTab] = useState<HighlightTab>('stay')
+  const [showFullItinerary, setShowFullItinerary] = useState(false)
 
   useEffect(() => {
     const data = getTripData()
@@ -73,6 +77,11 @@ export default function ResultsPage() {
     ? 'bg-blue-100 text-blue-700'
     : 'bg-slate-100 text-slate-600'
 
+  const visibleDays = showFullItinerary ? result.itinerary : result.itinerary.slice(0, 2)
+  const hiddenDayCount = Math.max(0, result.itinerary.length - 2)
+
+  const TABS: HighlightTab[] = ['stay', 'eat', 'do']
+
   return (
     <div className="mx-auto max-w-2xl px-6 py-16">
 
@@ -80,10 +89,10 @@ export default function ResultsPage() {
       <div className="mb-12">
         <div className="flex items-start gap-5 mb-6">
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2">
+            <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-slate-400 mb-3">
               {t('results.eyebrow')}
             </p>
-            <h1 className="text-4xl font-semibold tracking-tight text-slate-900 mb-2">
+            <h1 className="text-4xl font-semibold tracking-tight text-slate-900 mb-3">
               {result.destination}
             </h1>
             <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
@@ -165,32 +174,47 @@ export default function ResultsPage() {
         </section>
       )}
 
-      {/* ── Content sections ── */}
-      <div className="flex flex-col gap-10">
+      {/* ── 4. Highlights (tabbed) ── */}
+      <section className="mb-12">
+        <SectionHeading label={t('results.highlights')} />
 
-        {/* Where to Stay */}
-        <section>
-          <SectionHeading label={t('results.whereToStay')} />
-          <div className="bg-white rounded-2xl shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-slate-900 mb-1">{result.bestArea.name}</h3>
-            <p className="text-sm text-slate-600 mb-3 leading-relaxed">{result.bestArea.description}</p>
-            <p className="text-sm text-slate-500 italic">{result.bestArea.whyStayHere}</p>
+        {/* Tab pills */}
+        <div className="flex gap-1 bg-slate-100 p-1 rounded-full w-fit mb-6">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setHighlightTab(tab)}
+              className={`px-5 py-1.5 rounded-full text-sm font-medium transition-all cursor-pointer ${
+                highlightTab === tab
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {t(`results.tab.${tab}`)}
+            </button>
+          ))}
+        </div>
+
+        {/* Stay */}
+        {highlightTab === 'stay' && (
+          <div className="flex flex-col gap-5">
+            <div className="bg-white rounded-2xl shadow-sm p-6">
+              <h3 className="text-base font-semibold text-slate-900 mb-1">{result.bestArea.name}</h3>
+              <p className="text-sm text-slate-600 mb-3 leading-relaxed">{result.bestArea.description}</p>
+              <p className="text-sm text-slate-500 italic leading-relaxed">{result.bestArea.whyStayHere}</p>
+            </div>
+            <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col gap-5">
+              <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('results.gettingThere')}</h4>
+              <InfoBlock label={t('results.fromAirport')} value={result.transportation.fromAirport} />
+              <InfoBlock label={t('results.gettingAround')} value={result.transportation.gettingAround} />
+              <InfoBlock label={t('results.localTip')} value={result.transportation.tip} />
+            </div>
           </div>
-        </section>
+        )}
 
-        {/* Getting There */}
-        <section>
-          <SectionHeading label={t('results.gettingThere')} />
-          <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col gap-5">
-            <InfoBlock label={t('results.fromAirport')} value={result.transportation.fromAirport} />
-            <InfoBlock label={t('results.gettingAround')} value={result.transportation.gettingAround} />
-            <InfoBlock label={t('results.localTip')} value={result.transportation.tip} />
-          </div>
-        </section>
-
-        {/* Where to Eat */}
-        <section>
-          <SectionHeading label={t('results.whereToEat')} />
+        {/* Eat */}
+        {highlightTab === 'eat' && (
           <div className="flex flex-col gap-3">
             {result.restaurants.map((r, i) => (
               <div key={i} className="bg-white rounded-2xl shadow-sm p-5">
@@ -212,11 +236,10 @@ export default function ResultsPage() {
               </div>
             ))}
           </div>
-        </section>
+        )}
 
-        {/* What to Do */}
-        <section>
-          <SectionHeading label={t('results.whatToDo')} />
+        {/* Do */}
+        {highlightTab === 'do' && (
           <div className="flex flex-col gap-3">
             {result.thingsToDo.map((a, i) => (
               <div key={i} className="bg-white rounded-2xl shadow-sm p-5">
@@ -231,97 +254,142 @@ export default function ResultsPage() {
               </div>
             ))}
           </div>
-        </section>
+        )}
+      </section>
 
-        {/* ── 4. Itinerary With Reasoning ── */}
-        <section>
-          <SectionHeading label={t('results.itinerary')} />
-          <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col gap-8">
-            {result.itinerary.map((day) => (
-              <div key={day.day}>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.12em] mb-5">
-                  {t('results.day', { n: String(day.day) })}
-                </p>
-                <div className="flex flex-col gap-5 pl-4 border-l-2 border-slate-100">
-                  <ItinerarySlot time={t('results.morning')} activity={day.morning} />
-                  <ItinerarySlot time={t('results.afternoon')} activity={day.afternoon} />
-                  <ItinerarySlot time={t('results.evening')} activity={day.evening} />
-                </div>
+      {/* ── 5. Itinerary (collapsible) ── */}
+      <section className="mb-12">
+        <SectionHeading label={t('results.itinerary')} />
+        <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col gap-8">
+          {visibleDays.map((day) => (
+            <div key={day.day}>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.12em] mb-5">
+                {t('results.day', { n: String(day.day) })}
+              </p>
+              <div className="flex flex-col gap-5 pl-4 border-l-2 border-slate-100">
+                <ItinerarySlot time={t('results.morning')} activity={day.morning} />
+                <ItinerarySlot time={t('results.afternoon')} activity={day.afternoon} />
+                <ItinerarySlot time={t('results.evening')} activity={day.evening} />
               </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Expand / collapse */}
+        {hiddenDayCount > 0 && (
+          <div className="mt-4 text-center">
+            {!showFullItinerary ? (
+              <button
+                type="button"
+                onClick={() => setShowFullItinerary(true)}
+                className="text-sm text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+              >
+                {t('results.viewFullItinerary')} · {t('results.moreDays', { n: String(hiddenDayCount) })}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowFullItinerary(false)}
+                className="text-sm text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+              >
+                {t('results.collapseItinerary')}
+              </button>
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* ── 6. Just Go Recommendation ── */}
+      {result.justGoRecommendation && (
+        <section className="mb-12">
+          <SectionHeading label={t('results.justGoReco')} />
+          <div className="bg-slate-900 rounded-2xl p-6 sm:p-8">
+            <div className="flex gap-4">
+              <span className="text-slate-600 font-semibold text-base shrink-0 mt-0.5 select-none">→</span>
+              <p className="text-white text-sm leading-relaxed sm:text-base">
+                {result.justGoRecommendation}
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── 7. Alternative Versions ── */}
+      {result.alternativeVersions && result.alternativeVersions.length > 0 && (
+        <section className="mb-12">
+          <SectionHeading label={t('results.alternatives')} />
+          <p className="text-xs text-slate-400 mb-5 -mt-2">
+            {t('results.alternatives.sub')}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {result.alternativeVersions.map((alt, i) => (
+              <AlternativeCard key={i} alt={alt} />
             ))}
           </div>
         </section>
+      )}
 
-        {/* ── 5. Alternative Versions ── */}
-        {result.alternativeVersions && result.alternativeVersions.length > 0 && (
-          <section>
-            <SectionHeading label={t('results.alternatives')} />
-            <p className="text-xs text-slate-400 mb-4 -mt-2">
-              {t('results.alternatives.sub')}
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {result.alternativeVersions.map((alt, i) => (
-                <AlternativeCard key={i} alt={alt} />
-              ))}
-            </div>
-          </section>
-        )}
+      {/* ── 8. Plan B ── */}
+      <section className="mb-12">
+        <SectionHeading label={t('results.planB')} />
+        <div className="rounded-2xl bg-slate-50 border border-slate-100 p-6">
+          <p className="text-sm text-slate-600 leading-relaxed">{result.backupPlan}</p>
+        </div>
+      </section>
 
-        {/* Plan B */}
-        <section>
-          <SectionHeading label={t('results.planB')} />
-          <div className="rounded-2xl bg-slate-50 border border-slate-100 p-6">
-            <p className="text-sm text-slate-600 leading-relaxed">{result.backupPlan}</p>
-          </div>
-        </section>
+      {/* ── 9. Before You Book ── */}
+      <section className="mb-12">
+        <SectionHeading label={t('results.beforeYouBook')} />
+        <div className="bg-white rounded-2xl shadow-sm p-6">
+          <ul className="flex flex-col gap-3">
+            {result.bookingChecklist.map((item, i) => (
+              <li key={i}>
+                <button
+                  type="button"
+                  onClick={() => toggleCheck(i)}
+                  className="flex items-start gap-3 text-left w-full group cursor-pointer"
+                >
+                  <div className={`mt-0.5 h-4 w-4 rounded shrink-0 border-2 flex items-center justify-center transition-all ${
+                    checked.has(i)
+                      ? 'bg-emerald-500 border-emerald-500'
+                      : 'border-slate-300 group-hover:border-slate-400'
+                  }`}>
+                    {checked.has(i) && (
+                      <span className="text-white text-[10px] leading-none font-bold">✓</span>
+                    )}
+                  </div>
+                  <span className={`text-sm transition-colors ${
+                    checked.has(i) ? 'text-slate-400 line-through' : 'text-slate-700'
+                  }`}>
+                    {item}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
-        {/* Before You Book */}
-        <section>
-          <SectionHeading label={t('results.beforeYouBook')} />
-          <div className="bg-white rounded-2xl shadow-sm p-6">
-            <ul className="flex flex-col gap-3">
-              {result.bookingChecklist.map((item, i) => (
-                <li key={i}>
-                  <button
-                    type="button"
-                    onClick={() => toggleCheck(i)}
-                    className="flex items-start gap-3 text-left w-full group cursor-pointer"
-                  >
-                    <div className={`mt-0.5 h-4 w-4 rounded shrink-0 border-2 flex items-center justify-center transition-all ${
-                      checked.has(i)
-                        ? 'bg-emerald-500 border-emerald-500'
-                        : 'border-slate-300 group-hover:border-slate-400'
-                    }`}>
-                      {checked.has(i) && (
-                        <span className="text-white text-[10px] leading-none font-bold">✓</span>
-                      )}
-                    </div>
-                    <span className={`text-sm transition-colors ${
-                      checked.has(i) ? 'text-slate-400 line-through' : 'text-slate-700'
-                    }`}>
-                      {item}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-      </div>
-
-      {/* ── Footer actions ── */}
-      <div className="mt-12 pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+      {/* ── 10. Primary actions ── */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <button
+          type="button"
+          disabled
+          className="flex-1 rounded-full bg-slate-900 px-6 py-3.5 text-sm font-medium text-white text-center cursor-not-allowed opacity-60"
+        >
+          {t('results.savePlan')}
+        </button>
         <Link
           href="/planner"
-          className="text-sm text-slate-400 hover:text-slate-700 transition-colors"
+          className="flex-1 rounded-full border-2 border-slate-200 px-6 py-3.5 text-sm font-medium text-slate-700 text-center hover:border-slate-400 hover:text-slate-900 transition-colors"
         >
-          {t('results.adjustPrefs')}
+          {t('results.editPrefs')}
         </Link>
-        <p className="text-xs text-slate-300 text-center">
-          {t('results.mvpNote')}
-        </p>
       </div>
+
+      <p className="text-center text-xs text-slate-300">
+        {t('results.mvpNote')}
+      </p>
 
     </div>
   )
@@ -411,14 +479,21 @@ function AlternativeCard({ alt }: { alt: AlternativeVersion }) {
   const t = useT()
   return (
     <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-3 shadow-sm">
-      <h4 className="text-sm font-semibold text-slate-900">{alt.title}</h4>
+      <div className="flex items-start justify-between gap-2">
+        <h4 className="text-sm font-semibold text-slate-900">{alt.title}</h4>
+        {alt.tag && (
+          <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">
+            {alt.tag}
+          </span>
+        )}
+      </div>
       <p className="text-xs text-slate-500 leading-relaxed flex-1">{alt.description}</p>
       <button
         type="button"
         disabled
-        className="self-start rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-400 cursor-not-allowed"
+        className="self-start rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-400 cursor-not-allowed"
       >
-        {t('results.previewBtn')}
+        {t('results.comingSoon')}
       </button>
     </div>
   )

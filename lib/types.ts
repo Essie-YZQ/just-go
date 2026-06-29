@@ -50,6 +50,7 @@ export interface SourceInsight {
 export interface AlternativeVersion {
   title: string
   description: string
+  tag?: string
 }
 
 export interface TravelResult {
@@ -76,6 +77,7 @@ export interface TravelResult {
   thingsToDo: Activity[]
   itinerary: DayPlan[]
   alternativeVersions: AlternativeVersion[]
+  justGoRecommendation: string
   backupPlan: string
   bookingChecklist: string[]
 }
