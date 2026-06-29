@@ -8,28 +8,8 @@ import { Spinner } from '@/components/ui/Spinner'
 import { SourceCardGrid } from '@/components/SourceCardGrid'
 import { saveTripData, getProfiles } from '@/lib/storage'
 import { SOURCES, INTEREST_OPTIONS, BUDGET_OPTIONS, TRANSPORT_OPTIONS } from '@/lib/constants'
+import { useT } from '@/lib/i18n'
 import type { TripFormData, TravelProfile } from '@/lib/types'
-
-// ─── Page-local constants ─────────────────────────────────────────────────────
-
-const STEP_LABELS = ['Choose a Profile', 'The Trip', 'Your Style', 'Your Sources']
-
-const TRIP_DURATIONS = ['2', '3', '4', '5', '7', '10', '14']
-
-const PACE_OPTIONS = [
-  { value: 'relaxed', label: 'Take it easy', sub: 'A few highlights, lots of downtime' },
-  { value: 'moderate', label: 'Mix it up', sub: 'Balanced sightseeing and rest' },
-  { value: 'fast', label: 'See everything', sub: 'Pack in as much as possible' },
-]
-
-const BUDGET_LABEL: Record<string, string> = {
-  budget: 'Budget',
-  midrange: 'Comfortable',
-  premium: 'Premium',
-  luxury: 'Luxury',
-}
-
-const STEP_SHORT = ['Profile', 'Trip', 'Style', 'Sources']
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
@@ -71,6 +51,7 @@ type ToggleArray = (key: 'travelInterests' | 'trustedSources', value: string) =>
 
 export default function PlannerPage() {
   const router = useRouter()
+  const t = useT()
   const [step, setStep] = useState(0)
   const [profiles] = useState<TravelProfile[]>(() => getProfiles())
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null)
@@ -80,6 +61,13 @@ export default function PlannerPage() {
   }))
   const [generating, setGenerating] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const STEP_SHORT = [
+    t('planner.steps.profile'),
+    t('planner.steps.trip'),
+    t('planner.steps.style'),
+    t('planner.steps.sources'),
+  ]
 
   function setField<K extends keyof TripFormData>(key: K, value: TripFormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -110,20 +98,20 @@ export default function PlannerPage() {
   function validateStep(): boolean {
     if (step === 0) {
       if (!selectedProfileId) {
-        setErrors({ profile: 'Please choose a travel profile to continue.' })
+        setErrors({ profile: t('planner.profile.error') })
         return false
       }
     }
     if (step === 1) {
       const errs: Record<string, string> = {}
-      if (!form.destination.trim()) errs.destination = 'Please enter a destination.'
-      if (!form.departureCity.trim()) errs.departureCity = 'Please enter your departure city.'
-      if (!form.arrivalDate) errs.arrivalDate = 'Please pick a date.'
+      if (!form.destination.trim()) errs.destination = t('planner.trip.destination.error')
+      if (!form.departureCity.trim()) errs.departureCity = t('planner.trip.departure.error')
+      if (!form.arrivalDate) errs.arrivalDate = t('planner.trip.date.error')
       setErrors(errs)
       return Object.keys(errs).length === 0
     }
     if (step === 3 && form.trustedSources.length === 0) {
-      setErrors({ trustedSources: 'Pick at least one source to continue.' })
+      setErrors({ trustedSources: t('planner.sources.error') })
       return false
     }
     return true
@@ -152,8 +140,8 @@ export default function PlannerPage() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5">
         <Spinner />
         <div className="text-center">
-          <p className="text-base font-medium text-slate-700">Building your plan...</p>
-          <p className="text-sm text-slate-400 mt-1">Curating picks from your trusted sources</p>
+          <p className="text-base font-medium text-slate-700">{t('planner.loading.title')}</p>
+          <p className="text-sm text-slate-400 mt-1">{t('planner.loading.sub')}</p>
         </div>
       </div>
     )
@@ -169,7 +157,7 @@ export default function PlannerPage() {
           <div className="absolute top-4 left-4 right-4 h-px bg-slate-100">
             <div
               className="h-full bg-slate-900 transition-all duration-500"
-              style={{ width: `${(step / (STEP_LABELS.length - 1)) * 100}%` }}
+              style={{ width: `${(step / (STEP_SHORT.length - 1)) * 100}%` }}
             />
           </div>
 
@@ -211,7 +199,6 @@ export default function PlannerPage() {
             form={form}
             errors={errors}
             setField={setField}
-            durations={TRIP_DURATIONS}
           />
         )}
         {step === 2 && (
@@ -219,7 +206,6 @@ export default function PlannerPage() {
             form={form}
             setField={setField}
             toggleArray={toggleArray}
-            paceOptions={PACE_OPTIONS}
           />
         )}
         {step === 3 && (
@@ -239,7 +225,7 @@ export default function PlannerPage() {
             onClick={goBack}
             className="text-sm text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
           >
-            ← Back
+            {t('planner.back')}
           </button>
         )}
         {step < 3 ? (
@@ -248,7 +234,7 @@ export default function PlannerPage() {
             onClick={goNext}
             className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-sm font-medium text-white hover:bg-slate-700 transition-colors cursor-pointer"
           >
-            Continue →
+            {t('planner.continue')}
           </button>
         ) : (
           <button
@@ -256,7 +242,7 @@ export default function PlannerPage() {
             onClick={handleGenerate}
             className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-sm font-medium text-white hover:bg-slate-700 transition-colors cursor-pointer"
           >
-            Get My Plan →
+            {t('planner.getMyPlan')}
           </button>
         )}
       </div>
@@ -272,18 +258,20 @@ function StepProfile({ profiles, selectedProfileId, onSelect, error }: {
   onSelect: (p: TravelProfile) => void
   error?: string
 }) {
+  const t = useT()
+
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h2 className="text-2xl font-semibold text-slate-900 mb-1.5">Start with a profile</h2>
-        <p className="text-sm text-slate-400">Your profile pre-fills your preferences. You can adjust anything in the next steps.</p>
+        <h2 className="text-2xl font-semibold text-slate-900 mb-1.5">{t('planner.profile.heading')}</h2>
+        <p className="text-sm text-slate-400">{t('planner.profile.sub')}</p>
       </div>
 
       {profiles.length === 0 ? (
         <div className="text-center py-16 border-2 border-dashed border-slate-200 rounded-2xl">
-          <p className="text-slate-400 text-sm mb-3">No profiles yet.</p>
+          <p className="text-slate-400 text-sm mb-3">{t('planner.profile.empty')}</p>
           <Link href="/profiles" className="text-sm font-medium text-slate-700 underline underline-offset-4">
-            Create a travel profile →
+            {t('planner.profile.createLink')}
           </Link>
         </div>
       ) : (
@@ -307,7 +295,7 @@ function StepProfile({ profiles, selectedProfileId, onSelect, error }: {
                     <div className="flex items-center gap-2 flex-wrap mb-2.5">
                       <p className="text-sm font-semibold text-slate-900">{p.name}</p>
                       <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-                        {BUDGET_LABEL[p.budget] ?? p.budget}
+                        {t(`budgetLabel.${p.budget}`)}
                       </span>
                     </div>
                     {profileSources.length > 0 && (
@@ -319,7 +307,7 @@ function StepProfile({ profiles, selectedProfileId, onSelect, error }: {
                     )}
                     {p.activityStyle.length > 0 && (
                       <p className="text-xs text-slate-400">
-                        {p.activityStyle.slice(0, 3).map((a) => a.replace('-', ' ')).join(' · ')}
+                        {p.activityStyle.slice(0, 3).map((a) => t(`interest.${a}`)).join(' · ')}
                       </p>
                     )}
                   </div>
@@ -339,7 +327,7 @@ function StepProfile({ profiles, selectedProfileId, onSelect, error }: {
         href="/profiles"
         className="text-sm text-slate-400 hover:text-slate-700 transition-colors text-center"
       >
-        + Manage profiles
+        {t('planner.profile.manage')}
       </Link>
 
       {error && <p className="text-sm text-red-500 text-center">{error}</p>}
@@ -349,30 +337,32 @@ function StepProfile({ profiles, selectedProfileId, onSelect, error }: {
 
 // ─── Step 1: The Trip ─────────────────────────────────────────────────────────
 
-function StepTrip({ form, errors, setField, durations }: {
+function StepTrip({ form, errors, setField }: {
   form: TripFormData
   errors: Record<string, string>
   setField: SetField
-  durations: string[]
 }) {
+  const t = useT()
+  const TRIP_DURATIONS = ['2', '3', '4', '5', '7', '10', '14']
+
   return (
     <div className="flex flex-col gap-9">
       <div>
-        <h2 className="text-2xl font-semibold text-slate-900 mb-1.5">Where are you going?</h2>
-        <p className="text-sm text-slate-400">Start with the basics — we&apos;ll handle the rest.</p>
+        <h2 className="text-2xl font-semibold text-slate-900 mb-1.5">{t('planner.trip.heading')}</h2>
+        <p className="text-sm text-slate-400">{t('planner.trip.sub')}</p>
       </div>
 
       <div className="flex flex-col gap-4">
         <Input
-          label="Destination"
-          placeholder="Tokyo, Paris, Bali..."
+          label={t('planner.trip.destination')}
+          placeholder={t('planner.trip.destination.placeholder')}
           value={form.destination}
           onChange={(e) => setField('destination', e.target.value)}
           error={errors.destination}
         />
         <Input
-          label="Departing from"
-          placeholder="New York, London, Beijing..."
+          label={t('planner.trip.departure')}
+          placeholder={t('planner.trip.departure.placeholder')}
           value={form.departureCity}
           onChange={(e) => setField('departureCity', e.target.value)}
           error={errors.departureCity}
@@ -382,11 +372,14 @@ function StepTrip({ form, errors, setField, durations }: {
       <div className="flex flex-col gap-4">
         <div>
           <div className="flex items-center justify-between mb-3">
-            <label className="text-sm font-medium text-slate-700">Arrival date</label>
+            <label className="text-sm font-medium text-slate-700">{t('planner.trip.arrivalDate')}</label>
             <div className="flex gap-1.5">
-              {([{ label: 'Today', value: getToday() }, { label: 'Tomorrow', value: getTomorrow() }]).map((opt) => (
+              {([
+                { labelKey: 'planner.trip.today', value: getToday() },
+                { labelKey: 'planner.trip.tomorrow', value: getTomorrow() },
+              ]).map((opt) => (
                 <button
-                  key={opt.label}
+                  key={opt.labelKey}
                   type="button"
                   onClick={() => setField('arrivalDate', opt.value)}
                   className={`rounded-full border px-3 py-1 text-xs font-medium transition-all cursor-pointer ${
@@ -395,7 +388,7 @@ function StepTrip({ form, errors, setField, durations }: {
                       : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'
                   }`}
                 >
-                  {opt.label}
+                  {t(opt.labelKey)}
                 </button>
               ))}
             </div>
@@ -411,9 +404,9 @@ function StepTrip({ form, errors, setField, durations }: {
           {errors.arrivalDate && <p className="text-xs text-red-500 mt-1.5">{errors.arrivalDate}</p>}
         </div>
         <div>
-          <p className="text-sm font-medium text-slate-700 mb-3">Trip length</p>
+          <p className="text-sm font-medium text-slate-700 mb-3">{t('planner.trip.length')}</p>
           <div className="flex flex-wrap gap-2">
-            {durations.map((d) => (
+            {TRIP_DURATIONS.map((d) => (
               <button
                 key={d}
                 type="button"
@@ -436,23 +429,30 @@ function StepTrip({ form, errors, setField, durations }: {
 
 // ─── Step 2: Your Style ───────────────────────────────────────────────────────
 
-function StepStyle({ form, setField, toggleArray, paceOptions }: {
+function StepStyle({ form, setField, toggleArray }: {
   form: TripFormData
   setField: SetField
   toggleArray: ToggleArray
-  paceOptions: { value: string; label: string; sub: string }[]
 }) {
+  const t = useT()
+
+  const PACE_OPTIONS = [
+    { value: 'relaxed' },
+    { value: 'moderate' },
+    { value: 'fast' },
+  ]
+
   return (
     <div className="flex flex-col gap-9">
       <div>
-        <h2 className="text-2xl font-semibold text-slate-900 mb-1.5">How do you like to travel?</h2>
-        <p className="text-sm text-slate-400">Pre-filled from your profile — adjust anything you like.</p>
+        <h2 className="text-2xl font-semibold text-slate-900 mb-1.5">{t('planner.style.heading')}</h2>
+        <p className="text-sm text-slate-400">{t('planner.style.sub')}</p>
       </div>
 
       {/* Budget */}
       <div>
-        <p className="text-sm font-medium text-slate-700 mb-0.5">Budget</p>
-        <p className="text-xs text-slate-400 mb-3">Recommendations are adjusted for your destination.</p>
+        <p className="text-sm font-medium text-slate-700 mb-0.5">{t('planner.style.budget')}</p>
+        <p className="text-xs text-slate-400 mb-3">{t('planner.style.budget.hint')}</p>
         <div className="grid grid-cols-2 gap-2.5">
           {BUDGET_OPTIONS.map((opt) => (
             <button
@@ -465,8 +465,8 @@ function StepStyle({ form, setField, toggleArray, paceOptions }: {
                   : 'bg-white border-slate-200 text-slate-900 hover:border-slate-300'
               }`}
             >
-              <span className="text-sm font-semibold">{opt.label}</span>
-              <span className="text-xs text-slate-400">{opt.sub}</span>
+              <span className="text-sm font-semibold">{t(`budget.${opt.value}.label`)}</span>
+              <span className="text-xs text-slate-400">{t(`budget.${opt.value}.sub`)}</span>
             </button>
           ))}
         </div>
@@ -474,9 +474,9 @@ function StepStyle({ form, setField, toggleArray, paceOptions }: {
 
       {/* Pace */}
       <div>
-        <p className="text-sm font-medium text-slate-700 mb-3">Travel pace</p>
+        <p className="text-sm font-medium text-slate-700 mb-3">{t('planner.style.pace')}</p>
         <div className="grid grid-cols-3 gap-2.5">
-          {paceOptions.map((opt) => (
+          {PACE_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               type="button"
@@ -487,8 +487,8 @@ function StepStyle({ form, setField, toggleArray, paceOptions }: {
                   : 'bg-white border-slate-200 text-slate-900 hover:border-slate-300'
               }`}
             >
-              <span className="text-sm font-semibold">{opt.label}</span>
-              <span className="text-xs text-slate-400">{opt.sub}</span>
+              <span className="text-sm font-semibold">{t(`pace.${opt.value}.label`)}</span>
+              <span className="text-xs text-slate-400">{t(`pace.${opt.value}.sub`)}</span>
             </button>
           ))}
         </div>
@@ -496,7 +496,7 @@ function StepStyle({ form, setField, toggleArray, paceOptions }: {
 
       {/* Transport */}
       <div>
-        <p className="text-sm font-medium text-slate-700 mb-3">Getting around</p>
+        <p className="text-sm font-medium text-slate-700 mb-3">{t('planner.style.transport')}</p>
         <div className="flex flex-wrap gap-2">
           {TRANSPORT_OPTIONS.map((opt) => (
             <button
@@ -509,7 +509,7 @@ function StepStyle({ form, setField, toggleArray, paceOptions }: {
                   : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
               }`}
             >
-              {opt.label}
+              {t(`transport.${opt.value}`)}
             </button>
           ))}
         </div>
@@ -517,8 +517,8 @@ function StepStyle({ form, setField, toggleArray, paceOptions }: {
 
       {/* Interests */}
       <div>
-        <p className="text-sm font-medium text-slate-700 mb-1">You&apos;re into</p>
-        <p className="text-xs text-slate-400 mb-3">Select all that apply</p>
+        <p className="text-sm font-medium text-slate-700 mb-1">{t('planner.style.interests')}</p>
+        <p className="text-xs text-slate-400 mb-3">{t('planner.style.interests.hint')}</p>
         <div className="flex flex-wrap gap-2">
           {INTEREST_OPTIONS.map((opt) => (
             <button
@@ -531,7 +531,7 @@ function StepStyle({ form, setField, toggleArray, paceOptions }: {
                   : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
               }`}
             >
-              {opt.label}
+              {t(`interest.${opt.value}`)}
             </button>
           ))}
         </div>
@@ -547,14 +547,16 @@ function StepSources({ form, toggleArray, error }: {
   toggleArray: ToggleArray
   error?: string
 }) {
+  const t = useT()
+
   return (
     <div className="flex flex-col gap-8">
       <div>
         <h2 className="text-2xl font-semibold text-slate-900 mb-1.5">
-          Who do you trust for travel tips?
+          {t('planner.sources.heading')}
         </h2>
         <p className="text-sm text-slate-400">
-          Pre-filled from your profile — this shapes everything you&apos;ll see.
+          {t('planner.sources.sub')}
         </p>
       </div>
 

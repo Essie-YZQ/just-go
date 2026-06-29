@@ -1,6 +1,7 @@
 'use client'
 
 import { SOURCES } from '@/lib/constants'
+import { useT } from '@/lib/i18n'
 
 interface SourceCardGridProps {
   selected: string[]
@@ -8,6 +9,8 @@ interface SourceCardGridProps {
 }
 
 export function SourceCardGrid({ selected, onToggle }: SourceCardGridProps) {
+  const t = useT()
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {SOURCES.map((s) => {
@@ -27,10 +30,10 @@ export function SourceCardGrid({ selected, onToggle }: SourceCardGridProps) {
               {s.name}
             </p>
             <p className={`text-sm font-medium mb-1 ${isSelected ? (s.taglineColor ?? 'text-slate-700') : 'text-slate-600'}`}>
-              {s.tagline}
+              {t(`source.${s.value}.tagline`)}
             </p>
             <p className={`text-xs leading-relaxed ${isSelected ? (s.descColor ?? 'text-slate-500') : 'text-slate-400'}`}>
-              {s.desc}
+              {t(`source.${s.value}.desc`)}
             </p>
           </button>
         )

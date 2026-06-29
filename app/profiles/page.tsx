@@ -13,30 +13,8 @@ import {
   TRANSPORT_OPTIONS,
   INTEREST_OPTIONS,
 } from '@/lib/constants'
+import { useT } from '@/lib/i18n'
 import type { TravelProfile } from '@/lib/types'
-
-// ─── Display helpers ──────────────────────────────────────────────────────────
-
-const BUDGET_LABEL: Record<string, string> = {
-  budget: 'Budget',
-  midrange: 'Comfortable',
-  premium: 'Premium',
-  luxury: 'Luxury',
-}
-
-const HOTEL_LABEL: Record<string, string> = {
-  any: 'Any hotel',
-  hostel: 'Hostel / Guesthouse',
-  boutique: 'Boutique',
-  luxury: 'Luxury',
-}
-
-const FOOD_LABEL: Record<string, string> = {
-  any: 'Any food style',
-  'street-food': 'Street & Local',
-  casual: 'Casual Dining',
-  'fine-dining': 'Fine Dining',
-}
 
 const BLANK_PROFILE: Omit<TravelProfile, 'id'> = {
   name: '',
@@ -110,31 +88,33 @@ function ProfileListView({ profiles, onNew, onEdit, onDelete }: {
   onEdit: (p: TravelProfile) => void
   onDelete: (id: string) => void
 }) {
+  const t = useT()
+
   return (
     <div className="mx-auto max-w-3xl px-6 py-14">
       <div className="flex items-center justify-between mb-10">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 mb-1">Travel Profiles</h1>
-          <p className="text-sm text-slate-400">Each profile shapes your entire travel plan.</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 mb-1">{t('profiles.title')}</h1>
+          <p className="text-sm text-slate-400">{t('profiles.sub')}</p>
         </div>
         <button
           type="button"
           onClick={onNew}
           className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700 transition-colors cursor-pointer"
         >
-          + New Profile
+          {t('profiles.newBtn')}
         </button>
       </div>
 
       {profiles.length === 0 ? (
         <div className="text-center py-24 border-2 border-dashed border-slate-200 rounded-2xl">
-          <p className="text-slate-400 text-sm mb-4">No profiles yet.</p>
+          <p className="text-slate-400 text-sm mb-4">{t('profiles.empty')}</p>
           <button
             type="button"
             onClick={onNew}
             className="text-sm font-medium text-slate-700 underline underline-offset-4 cursor-pointer"
           >
-            Create your first profile
+            {t('profiles.createFirst')}
           </button>
         </div>
       ) : (
@@ -149,7 +129,7 @@ function ProfileListView({ profiles, onNew, onEdit, onDelete }: {
           >
             <div className="flex items-center gap-3 text-slate-400 group-hover:text-slate-600 transition-colors">
               <span className="text-2xl font-light">+</span>
-              <span className="text-sm font-medium">Create new profile</span>
+              <span className="text-sm font-medium">{t('profiles.createNew')}</span>
             </div>
           </button>
         </div>
@@ -160,33 +140,33 @@ function ProfileListView({ profiles, onNew, onEdit, onDelete }: {
 
 // ─── Profile card ─────────────────────────────────────────────────────────────
 
-function getStyleSummary(profile: TravelProfile): string {
-  const parts: string[] = []
-  if (profile.hotelStyle !== 'any') parts.push(HOTEL_LABEL[profile.hotelStyle])
-  if (profile.foodStyle !== 'any') parts.push(FOOD_LABEL[profile.foodStyle])
-  return parts.join(' · ')
-}
-
 function ProfileCard({ profile, onEdit, onDelete }: {
   profile: TravelProfile
   onEdit: (p: TravelProfile) => void
   onDelete: (id: string) => void
 }) {
+  const t = useT()
   const profileSources = SOURCES.filter((s) => profile.trustedSources.includes(s.value))
   const topActivities = profile.activityStyle.slice(0, 3)
-  const styleSummary = getStyleSummary(profile)
+
+  const styleParts: string[] = []
+  if (profile.hotelStyle !== 'any') styleParts.push(t(`hotelLabel.${profile.hotelStyle}`))
+  if (profile.foodStyle !== 'any') styleParts.push(t(`foodLabel.${profile.foodStyle}`))
+  const styleSummary = styleParts.join(' · ')
 
   return (
     <div className="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col gap-3 shadow-sm">
       <div className="flex items-start justify-between gap-3">
-        <h3 className="text-base font-semibold text-slate-900 leading-snug">{profile.name || 'Untitled Profile'}</h3>
+        <h3 className="text-base font-semibold text-slate-900 leading-snug">
+          {profile.name || t('profiles.untitled')}
+        </h3>
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={() => onEdit(profile)}
             className="text-xs text-slate-400 hover:text-slate-700 transition-colors cursor-pointer font-medium"
           >
-            Edit
+            {t('profiles.card.edit')}
           </button>
           <button
             type="button"
@@ -200,7 +180,7 @@ function ProfileCard({ profile, onEdit, onDelete }: {
       </div>
 
       <span className="inline-flex w-fit rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
-        {BUDGET_LABEL[profile.budget] ?? profile.budget}
+        {t(`budgetLabel.${profile.budget}`)}
       </span>
 
       {profileSources.length > 0 && (
@@ -218,8 +198,8 @@ function ProfileCard({ profile, onEdit, onDelete }: {
       {topActivities.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {topActivities.map((a) => (
-            <span key={a} className="rounded-full bg-slate-50 border border-slate-100 px-2.5 py-0.5 text-xs text-slate-500 capitalize">
-              {a.replace('-', ' ')}
+            <span key={a} className="rounded-full bg-slate-50 border border-slate-100 px-2.5 py-0.5 text-xs text-slate-500">
+              {t(`interest.${a}`)}
             </span>
           ))}
         </div>
@@ -235,6 +215,7 @@ function ProfileEditView({ profile, onSave, onBack }: {
   onSave: (p: TravelProfile) => void
   onBack: () => void
 }) {
+  const t = useT()
   const [form, setForm] = useState<TravelProfile>(profile)
   const [saving, setSaving] = useState(false)
   const [nameError, setNameError] = useState('')
@@ -266,7 +247,7 @@ function ProfileEditView({ profile, onSave, onBack }: {
 
   function handleSave() {
     if (!form.name.trim()) {
-      setNameError('Please give this profile a name.')
+      setNameError(t('profiles.edit.nameError'))
       return
     }
     setSaving(true)
@@ -279,7 +260,7 @@ function ProfileEditView({ profile, onSave, onBack }: {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Spinner size="sm" />
-        <p className="text-sm text-slate-400">Saving profile...</p>
+        <p className="text-sm text-slate-400">{t('profiles.edit.saving')}</p>
       </div>
     )
   }
@@ -293,10 +274,10 @@ function ProfileEditView({ profile, onSave, onBack }: {
           onClick={onBack}
           className="text-sm text-slate-400 hover:text-slate-700 transition-colors cursor-pointer mb-6 block"
         >
-          ← Travel Profiles
+          {t('profiles.edit.backLink')}
         </button>
         <h1 className="text-2xl font-semibold text-slate-900">
-          {isNew ? 'New Profile' : 'Edit Profile'}
+          {isNew ? t('profiles.edit.newTitle') : t('profiles.edit.editTitle')}
         </h1>
       </div>
 
@@ -305,8 +286,8 @@ function ProfileEditView({ profile, onSave, onBack }: {
         {/* Profile name */}
         <div>
           <Input
-            label="Profile name"
-            placeholder="e.g. Japan with Friends, Europe Luxury, Solo Adventure..."
+            label={t('profiles.edit.nameLabel')}
+            placeholder={t('profiles.edit.namePlaceholder')}
             value={form.name}
             onChange={(e) => setField('name', e.target.value)}
             error={nameError}
@@ -314,13 +295,13 @@ function ProfileEditView({ profile, onSave, onBack }: {
         </div>
 
         {/* Budget */}
-        <Section label="Budget" hint="Recommendations are adjusted for your destination.">
+        <Section label={t('profiles.edit.budget')} hint={t('profiles.edit.budget.hint')}>
           <div className="grid grid-cols-2 gap-2.5">
             {BUDGET_OPTIONS.map((opt) => (
               <TileButton
                 key={opt.value}
-                label={opt.label}
-                sub={opt.sub}
+                label={t(`budget.${opt.value}.label`)}
+                sub={t(`budget.${opt.value}.sub`)}
                 selected={form.budget === opt.value}
                 onClick={() => setField('budget', opt.value)}
               />
@@ -329,13 +310,13 @@ function ProfileEditView({ profile, onSave, onBack }: {
         </Section>
 
         {/* Hotel Style */}
-        <Section label="Hotel Style">
+        <Section label={t('profiles.edit.hotelStyle')}>
           <div className="grid grid-cols-2 gap-2.5">
             {HOTEL_STYLE_OPTIONS.map((opt) => (
               <TileButton
                 key={opt.value}
-                label={opt.label}
-                sub={opt.sub}
+                label={t(`hotel.${opt.value}.label`)}
+                sub={t(`hotel.${opt.value}.sub`)}
                 selected={form.hotelStyle === opt.value}
                 onClick={() => setField('hotelStyle', opt.value)}
               />
@@ -344,13 +325,13 @@ function ProfileEditView({ profile, onSave, onBack }: {
         </Section>
 
         {/* Food Style */}
-        <Section label="Food Style">
+        <Section label={t('profiles.edit.foodStyle')}>
           <div className="grid grid-cols-2 gap-2.5">
             {FOOD_STYLE_OPTIONS.map((opt) => (
               <TileButton
                 key={opt.value}
-                label={opt.label}
-                sub={opt.sub}
+                label={t(`food.${opt.value}.label`)}
+                sub={t(`food.${opt.value}.sub`)}
                 selected={form.foodStyle === opt.value}
                 onClick={() => setField('foodStyle', opt.value)}
               />
@@ -359,12 +340,12 @@ function ProfileEditView({ profile, onSave, onBack }: {
         </Section>
 
         {/* Activity Style */}
-        <Section label="Activity Style" hint="Select all that apply">
+        <Section label={t('profiles.edit.activityStyle')} hint={t('profiles.edit.activityStyle.hint')}>
           <div className="flex flex-wrap gap-2">
             {INTEREST_OPTIONS.map((opt) => (
               <ChipButton
                 key={opt.value}
-                label={opt.label}
+                label={t(`interest.${opt.value}`)}
                 selected={form.activityStyle.includes(opt.value)}
                 onClick={() => toggleActivity(opt.value)}
               />
@@ -373,12 +354,12 @@ function ProfileEditView({ profile, onSave, onBack }: {
         </Section>
 
         {/* Transportation */}
-        <Section label="Getting Around">
+        <Section label={t('profiles.edit.transport')}>
           <div className="flex flex-wrap gap-2">
             {TRANSPORT_OPTIONS.map((opt) => (
               <ChipButton
                 key={opt.value}
-                label={opt.label}
+                label={t(`transport.${opt.value}`)}
                 selected={form.transportationPreference === opt.value}
                 onClick={() => setField('transportationPreference', opt.value)}
               />
@@ -387,7 +368,7 @@ function ProfileEditView({ profile, onSave, onBack }: {
         </Section>
 
         {/* Trusted Sources */}
-        <Section label="Trusted Sources" hint="This is the most important choice — it shapes your entire plan.">
+        <Section label={t('profiles.edit.sources')} hint={t('profiles.edit.sources.hint')}>
           <SourceCardGrid selected={form.trustedSources} onToggle={toggleSource} />
         </Section>
 
@@ -400,7 +381,7 @@ function ProfileEditView({ profile, onSave, onBack }: {
           onClick={handleSave}
           className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-8 py-3 text-sm font-medium text-white hover:bg-slate-700 transition-colors cursor-pointer"
         >
-          Save Profile
+          {t('profiles.edit.saveBtn')}
         </button>
       </div>
     </div>

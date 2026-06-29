@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { getTripData } from '@/lib/storage'
 import { generateMockResult } from '@/lib/mock-data'
 import { SOURCES } from '@/lib/constants'
+import { useT, useLanguage } from '@/lib/i18n'
 import type { TravelResult, DayActivity, SourceInsight, AlternativeVersion } from '@/lib/types'
 
 const SOURCE_META = Object.fromEntries(
@@ -20,6 +21,8 @@ type PageData = {
 
 export default function ResultsPage() {
   const router = useRouter()
+  const t = useT()
+  const { lang } = useLanguage()
   const [pageData, setPageData] = useState<PageData | null>(null)
   const [checked, setChecked] = useState<Set<number>>(new Set())
 
@@ -49,7 +52,7 @@ export default function ResultsPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="h-6 w-6 rounded-full border-2 border-slate-200 border-t-slate-700 animate-spin" />
-        <p className="text-sm text-slate-400">Loading your travel plan...</p>
+        <p className="text-sm text-slate-400">{t('results.loading')}</p>
       </div>
     )
   }
@@ -58,11 +61,10 @@ export default function ResultsPage() {
   const isGo = result.goNoGo === 'GO'
 
   const formattedDate = arrivalDate
-    ? new Date(arrivalDate + 'T00:00:00').toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-      })
+    ? new Date(arrivalDate + 'T00:00:00').toLocaleDateString(
+        lang === 'zh' ? 'zh-CN' : 'en-US',
+        { month: 'long', day: 'numeric', year: 'numeric' }
+      )
     : null
 
   const confidenceColor = result.confidence === 'High'
@@ -79,7 +81,7 @@ export default function ResultsPage() {
         <div className="flex items-start gap-5 mb-6">
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2">
-              Your travel plan
+              {t('results.eyebrow')}
             </p>
             <h1 className="text-4xl font-semibold tracking-tight text-slate-900 mb-2">
               {result.destination}
@@ -87,10 +89,10 @@ export default function ResultsPage() {
             <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
               {formattedDate && <span>{formattedDate}</span>}
               {formattedDate && <span>·</span>}
-              <span>{tripLength} days</span>
+              <span>{tripLength} {t('results.days')}</span>
               <span>·</span>
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${confidenceColor}`}>
-                {result.confidence} Confidence
+                {t('results.confidence', { level: result.confidence })}
               </span>
             </div>
           </div>
@@ -106,7 +108,7 @@ export default function ResultsPage() {
             <p className={`text-xs font-medium mt-0.5 ${
               isGo ? 'text-emerald-500' : 'text-rose-500'
             }`}>
-              {isGo ? 'Recommended' : 'Not recommended'}
+              {isGo ? t('results.goRecommended') : t('results.goNotRecommended')}
             </p>
           </div>
         </div>
@@ -119,7 +121,7 @@ export default function ResultsPage() {
       {/* ── Quick info strip ── */}
       <div className="flex flex-wrap gap-x-5 gap-y-2 py-5 mb-12 border-y border-slate-100 text-sm">
         <span className="text-slate-400">
-          Stay in{' '}
+          {t('results.stayIn')}{' '}
           <span className="font-semibold text-slate-800">{result.bestArea.name}</span>
         </span>
         <span className="text-slate-300 hidden sm:inline">·</span>
@@ -131,7 +133,7 @@ export default function ResultsPage() {
       {/* ── 2. Why This Plan ── */}
       {result.whyThisPlan && (
         <section className="mb-12">
-          <SectionHeading label="Why This Plan" />
+          <SectionHeading label={t('results.whyThisPlan')} />
           <div className="bg-slate-50 rounded-2xl border border-slate-100 p-6">
             <p className="text-sm text-slate-700 leading-relaxed mb-5">
               {result.whyThisPlan.summary}
@@ -151,9 +153,9 @@ export default function ResultsPage() {
       {/* ── 3. Source Intelligence ── */}
       {result.sourceIntelligence && result.sourceIntelligence.length > 0 && (
         <section className="mb-12">
-          <SectionHeading label="Source Intelligence" />
+          <SectionHeading label={t('results.sourceIntel')} />
           <p className="text-xs text-slate-400 mb-4 -mt-2">
-            How each trusted source shaped this plan.
+            {t('results.sourceIntel.sub')}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {result.sourceIntelligence.map((insight) => (
@@ -168,7 +170,7 @@ export default function ResultsPage() {
 
         {/* Where to Stay */}
         <section>
-          <SectionHeading label="Where to Stay" />
+          <SectionHeading label={t('results.whereToStay')} />
           <div className="bg-white rounded-2xl shadow-sm p-6">
             <h3 className="text-lg font-semibold text-slate-900 mb-1">{result.bestArea.name}</h3>
             <p className="text-sm text-slate-600 mb-3 leading-relaxed">{result.bestArea.description}</p>
@@ -178,17 +180,17 @@ export default function ResultsPage() {
 
         {/* Getting There */}
         <section>
-          <SectionHeading label="Getting There" />
+          <SectionHeading label={t('results.gettingThere')} />
           <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col gap-5">
-            <InfoBlock label="From the airport" value={result.transportation.fromAirport} />
-            <InfoBlock label="Getting around" value={result.transportation.gettingAround} />
-            <InfoBlock label="Local tip" value={result.transportation.tip} />
+            <InfoBlock label={t('results.fromAirport')} value={result.transportation.fromAirport} />
+            <InfoBlock label={t('results.gettingAround')} value={result.transportation.gettingAround} />
+            <InfoBlock label={t('results.localTip')} value={result.transportation.tip} />
           </div>
         </section>
 
         {/* Where to Eat */}
         <section>
-          <SectionHeading label="Where to Eat" />
+          <SectionHeading label={t('results.whereToEat')} />
           <div className="flex flex-col gap-3">
             {result.restaurants.map((r, i) => (
               <div key={i} className="bg-white rounded-2xl shadow-sm p-5">
@@ -214,7 +216,7 @@ export default function ResultsPage() {
 
         {/* What to Do */}
         <section>
-          <SectionHeading label="What to Do" />
+          <SectionHeading label={t('results.whatToDo')} />
           <div className="flex flex-col gap-3">
             {result.thingsToDo.map((a, i) => (
               <div key={i} className="bg-white rounded-2xl shadow-sm p-5">
@@ -233,17 +235,17 @@ export default function ResultsPage() {
 
         {/* ── 4. Itinerary With Reasoning ── */}
         <section>
-          <SectionHeading label="Your Itinerary" />
+          <SectionHeading label={t('results.itinerary')} />
           <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col gap-8">
             {result.itinerary.map((day) => (
               <div key={day.day}>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.12em] mb-5">
-                  Day {day.day}
+                  {t('results.day', { n: String(day.day) })}
                 </p>
                 <div className="flex flex-col gap-5 pl-4 border-l-2 border-slate-100">
-                  <ItinerarySlot time="Morning" activity={day.morning} />
-                  <ItinerarySlot time="Afternoon" activity={day.afternoon} />
-                  <ItinerarySlot time="Evening" activity={day.evening} />
+                  <ItinerarySlot time={t('results.morning')} activity={day.morning} />
+                  <ItinerarySlot time={t('results.afternoon')} activity={day.afternoon} />
+                  <ItinerarySlot time={t('results.evening')} activity={day.evening} />
                 </div>
               </div>
             ))}
@@ -253,9 +255,9 @@ export default function ResultsPage() {
         {/* ── 5. Alternative Versions ── */}
         {result.alternativeVersions && result.alternativeVersions.length > 0 && (
           <section>
-            <SectionHeading label="Other Angles to Consider" />
+            <SectionHeading label={t('results.alternatives')} />
             <p className="text-xs text-slate-400 mb-4 -mt-2">
-              Different ways to approach this trip — static previews for now.
+              {t('results.alternatives.sub')}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {result.alternativeVersions.map((alt, i) => (
@@ -267,7 +269,7 @@ export default function ResultsPage() {
 
         {/* Plan B */}
         <section>
-          <SectionHeading label="Plan B" />
+          <SectionHeading label={t('results.planB')} />
           <div className="rounded-2xl bg-slate-50 border border-slate-100 p-6">
             <p className="text-sm text-slate-600 leading-relaxed">{result.backupPlan}</p>
           </div>
@@ -275,7 +277,7 @@ export default function ResultsPage() {
 
         {/* Before You Book */}
         <section>
-          <SectionHeading label="Before You Book" />
+          <SectionHeading label={t('results.beforeYouBook')} />
           <div className="bg-white rounded-2xl shadow-sm p-6">
             <ul className="flex flex-col gap-3">
               {result.bookingChecklist.map((item, i) => (
@@ -314,10 +316,10 @@ export default function ResultsPage() {
           href="/planner"
           className="text-sm text-slate-400 hover:text-slate-700 transition-colors"
         >
-          ← Adjust preferences
+          {t('results.adjustPrefs')}
         </Link>
         <p className="text-xs text-slate-300 text-center">
-          MVP v1 · Real AI integration coming in v2
+          {t('results.mvpNote')}
         </p>
       </div>
 
@@ -406,6 +408,7 @@ function SourceInsightCard({ insight }: { insight: SourceInsight }) {
 }
 
 function AlternativeCard({ alt }: { alt: AlternativeVersion }) {
+  const t = useT()
   return (
     <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-3 shadow-sm">
       <h4 className="text-sm font-semibold text-slate-900">{alt.title}</h4>
@@ -415,7 +418,7 @@ function AlternativeCard({ alt }: { alt: AlternativeVersion }) {
         disabled
         className="self-start rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-400 cursor-not-allowed"
       >
-        Preview version
+        {t('results.previewBtn')}
       </button>
     </div>
   )
